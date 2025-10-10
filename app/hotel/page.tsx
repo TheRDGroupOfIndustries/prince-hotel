@@ -1,18 +1,18 @@
-import { HOTEL_PRINCE_DIAMOND } from "@/data/hotel-prince-diamond"
-import { HotelHeader } from "@/components/hotel/hotel-header"
-import { HeroBooking } from "@/components/hotel/hero-booking"
-import { ReviewsSection } from "@/components/hotel/reviews-section"
-import { PropertyRules } from "@/components/hotel/property-rules"
-import { LocationMap } from "@/components/hotel/location-map"
-import { SimilarProperties } from "@/components/hotel/similar-properties"
-import { RoomTypeSection } from "@/components/hotel/room-type-section"
-import { Card } from "@/components/base/card"
+import { HOTEL_PRINCE_DIAMOND } from "@/data/hotel-prince-diamond";
+import { HotelHeader } from "@/components/hotel/hotel-header";
+import { HeroBooking } from "@/components/hotel/hero-booking";
+import { ReviewsSection } from "@/components/hotel/reviews-section";
+import { PropertyRules } from "@/components/hotel/property-rules";
+import { LocationMap } from "@/components/hotel/location-map";
+import { SimilarProperties } from "@/components/hotel/similar-properties";
+import { RoomTypeSection } from "@/components/hotel/room-type-section";
+import { Card } from "@/components/base/card";
 
 export default function Page() {
-  const hotel = HOTEL_PRINCE_DIAMOND
+  const hotel = HOTEL_PRINCE_DIAMOND;
 
-  const featuredRoom = hotel.roomTypes[0]
-  const featuredPlan = featuredRoom.ratePlans[0]
+  const featuredRoom = hotel.roomTypes[0];
+  const featuredPlan = featuredRoom.ratePlans[0];
 
   return (
     <main className="container mx-auto max-w-6xl space-y-8 px-4 py-6">
@@ -52,7 +52,13 @@ export default function Page() {
         ))}
       </section>
 
-      {hotel.coordinates && <LocationMap lat={hotel.coordinates.lat} lng={hotel.coordinates.lng} title={hotel.name} />}
+      {hotel.coordinates && (
+        <LocationMap
+          lat={hotel.coordinates.lat}
+          lng={hotel.coordinates.lng}
+          title={hotel.name}
+        />
+      )}
 
       <PropertyRules
         checkInFrom={hotel.rules.checkInFrom}
@@ -63,11 +69,9 @@ export default function Page() {
       <ReviewsSection data={hotel.reviews} hotelName={hotel.name} />
 
       <Card className="p-4 text-sm text-muted-foreground">
-        Note: This page is a stand‑alone booking view for {hotel.name}. Pricing and availability may change based on
-        selected dates and occupancy.
+        Note: This page is a stand‑alone booking view for {hotel.name}. Pricing
+        and availability may change based on selected dates and occupancy.
       </Card>
-
-     
     </main>
-  )
+  );
 }
