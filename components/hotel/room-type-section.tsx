@@ -44,13 +44,13 @@ export function RoomTypeSection({ room }: Props) {
             <>
               <button
                 onClick={prevImage}
-                className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/30 p-1 text-white"
+                className="absolute left-2 top-1/3 -translate-y-1/2 rounded-full bg-black/30 p-1 text-white"
               >
                 <ChevronLeft size={20} />
               </button>
               <button
                 onClick={nextImage}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/30 p-1 text-white"
+                className="absolute right-2 top-1/3 -translate-y-1/2 rounded-full bg-black/30 p-1 text-white"
               >
                 <ChevronRight size={20} />
               </button>
