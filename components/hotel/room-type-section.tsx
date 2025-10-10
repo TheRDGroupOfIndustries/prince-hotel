@@ -28,10 +28,10 @@ export function RoomTypeSection({ room }: Props) {
 
   return (
     <section className="rounded-lg border bg-card">
-      <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 p-4 md:grid-cols-3 lg:gap-8 lg:p-6">
         {/* Image Carousel */}
         <div className="md:col-span-1 relative">
-          <div className="relative h-64 w-full md:h-80">
+          <div className="relative h-64 w-full sm:h-72 md:h-80 lg:h-96">
             <Image
               src={room.photos[currentIndex] || "/placeholder.svg"}
               alt={`${room.name} image ${currentIndex + 1}`}
@@ -44,27 +44,29 @@ export function RoomTypeSection({ room }: Props) {
             <>
               <button
                 onClick={prevImage}
-                className="absolute left-2 top-1/3 -translate-y-1/2 rounded-full bg-black/30 p-1 text-white"
+                className="absolute left-2 top-1/3 -translate-y-1/2 rounded-full bg-black/30 p-1 sm:p-2 text-white"
               >
-                <ChevronLeft size={20} />
+                <ChevronLeft size={20} className="sm:w-6 sm:h-6" />
               </button>
               <button
                 onClick={nextImage}
-                className="absolute right-2 top-1/3 -translate-y-1/2 rounded-full bg-black/30 p-1 text-white"
+                className="absolute right-2 top-1/3 -translate-y-1/2 rounded-full bg-black/30 p-1 sm:p-2 text-white"
               >
-                <ChevronRight size={20} />
+                <ChevronRight size={20} className="sm:w-6 sm:h-6" />
               </button>
             </>
           )}
 
-          <div className="mt-2 text-sm">
-            <h1 className="font-bold text-xl">{room.name}</h1>
+          <div className="mt-3 text-sm sm:mt-4">
+            <h1 className="font-bold text-lg sm:text-xl">{room.name}</h1>
             {details.length > 0 && (
-              <p className="text-muted-foreground">{details.join(" • ")}</p>
+              <p className="text-muted-foreground text-xs sm:text-sm">
+                {details.join(" • ")}
+              </p>
             )}
           </div>
 
-          <ul className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+          <ul className="mt-3 grid grid-cols-2 gap-2 text-xs sm:text-sm text-muted-foreground">
             {room.amenities.slice(0, 10).map((a) => (
               <li
                 key={a}
@@ -77,7 +79,7 @@ export function RoomTypeSection({ room }: Props) {
 
           <a
             href="#"
-            className="mt-3 inline-block text-xs text-accent underline"
+            className="mt-3 inline-block text-xs sm:text-sm text-accent underline"
             aria-label={`More details about ${room.name}`}
           >
             More Details
@@ -92,7 +94,7 @@ export function RoomTypeSection({ room }: Props) {
         </div>
       </div>
 
-      <Card className="m-4 p-3 text-xs text-muted-foreground">
+      <Card className="m-4 p-3 text-xs sm:text-sm text-muted-foreground">
         Taxes and fees may vary by dates and occupancy. Final price shown at
         checkout.
       </Card>
