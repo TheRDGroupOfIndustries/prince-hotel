@@ -1,4 +1,4 @@
-import type { HotelMeta } from "@/types/hotel"
+import type { HotelMeta } from "@/types/hotel";
 
 export const HOTEL_PRINCE_DIAMOND: HotelMeta = {
   id: "hotel-prince-diamond",
@@ -18,10 +18,11 @@ export const HOTEL_PRINCE_DIAMOND: HotelMeta = {
     blurb: "4.4 km drive to Kashi Vishwanath Temple",
   },
   heroPhotos: [
-    "/hotel-prince-diamond-lobby.jpg",
-    "/hotel-prince-diamond-room.jpg",
-    "/hotel-prince-diamond-corridor.jpg",
-    "/hotel-prince-diamond-bathroom.jpg",
+    "princehotel3.jpg",
+    "princehotel2.jpg",
+    "princehotel7.jpg",
+    "princehotel1.jpg",
+    "princehotel5.jpg",
   ],
   coordinates: { lat: 25.3176, lng: 82.9739 },
   amenitiesHighlights: [
@@ -50,39 +51,34 @@ export const HOTEL_PRINCE_DIAMOND: HotelMeta = {
       name: "Deluxe Room",
       shortDescription: "Cozy room with modern amenities",
       bedInfo: "1 King Bed • 2 Guests",
-      sizeSqft: 190,
+      sizeSqft: 100,
       amenities: [
-        "City View",
-        "1 Bathroom",
-        "Air Conditioning",
-        "Mineral Water",
-        "Work Desk",
-        "Closet",
-        "Chair",
+        "Bathroom",
+        "Mineral Water- additional charge",
+        "Air Conditioning ",
         "Telephone",
+        "Closet",
+
         "Minibar",
       ],
-      photos: ["/deluxe-room.jpg", "/deluxe-bathroom.jpg"],
+      photos: ["/d1.jpg", "/d2.jpg", "/deluxe1.webp", "/deluxe2.webp"],
       occupancy: { adults: 2 },
       ratePlans: [
         {
           id: "deluxe-ro",
           name: "Room Only",
           refundable: false, // Non-Refundable per screenshot
-          perks: ["No meals included", "Free Wi‑Fi"],
-          cancellationPolicy: "Non‑refundable rate.",
-          price: 1769,
+          price: 1677,
           currency: "INR",
           ctaLabel: "BOOK NOW",
-          listPrice: 2945, // crossed MRP to match right rail
+          listPrice: 2790, // crossed MRP to match right rail
         },
         {
           id: "deluxe-bb",
           name: "Room with Breakfast",
           refundable: false, // Non-Refundable per screenshot
-          perks: ["Breakfast included", "Free Wi‑Fi"],
-          cancellationPolicy: "Non‑refundable rate.",
-          price: 1827,
+          perks: ["Breakfast included"],
+          price: 1731,
           currency: "INR",
           ctaLabel: "BOOK NOW",
         },
@@ -96,52 +92,59 @@ export const HOTEL_PRINCE_DIAMOND: HotelMeta = {
       sizeSqft: 180,
       amenities: [
         "City View",
-        "1 Bathroom",
+        "Bathroom",
         "Air Conditioning",
         "Mineral Water",
         "Work Desk",
-        "Closet",
         "Chair",
-        "Telephone",
-        "Minibar",
+        "Minibar(Paid on request)",
       ],
-      photos: ["/super-deluxe-room.jpg", "/super-deluxe-bathroom.jpg"],
+      photos: [
+        "/superdeluxe.jpg",
+        "/sd-bathroom.jpg",
+        "/sd2.jpg",
+        "/sd-3.jpg",
+        "/sd5.jpg",
+        "/sd6.jpg",
+      ],
       occupancy: { adults: 2 },
       ratePlans: [
         {
           id: "sdeluxe-ro",
           name: "Room Only",
           refundable: false,
-          perks: ["No meals included", "Free Wi‑Fi"],
-          cancellationPolicy: "Non‑refundable rate.",
-          price: 1998,
+          price: 1893,
           currency: "INR",
           ctaLabel: "BOOK NOW",
+          listPrice: 3150, // crossed MRP to match right rail
         },
         {
           id: "sdeluxe-bb",
           name: "Room with Breakfast",
           refundable: false,
-          perks: ["Breakfast included", "Free Wi‑Fi"],
-          cancellationPolicy: "Non‑refundable rate.",
-          price: 2055,
+          perks: ["Breakfast included"],
+
+          price: 1948,
           currency: "INR",
           ctaLabel: "BOOK NOW",
+          listPrice: 3250, // crossed MRP to match right rail
         },
         {
           id: "sdeluxe-bb-super",
           name: "Room with Breakfast",
-          refundable: true,
+          refundable: false,
           perks: [
             "Super Package",
+            "Breakfast included",
             "Complimentary Hi‑Tea",
-            "Soft & Hot Beverages (from fixed menu)",
+            "10% off on Minibar",
             "10% off Laundry service (up to 10 clothing items)",
             "10% off on Food & Beverages (fixed menu)",
-            "Early Check‑in (subject to availability)",
+            "Room Upgrade , subject to availability",
+            "Early Check‑In upto 2 hours (subject to availability)",
           ],
-          cancellationPolicy: "Free cancellation until 24 hours before check‑in.",
-          price: 2512,
+          price: 2381,
+          listPrice: 3980, // crossed MRP to match right rail
           currency: "INR",
           ctaLabel: "BOOK NOW",
         },
@@ -161,30 +164,34 @@ export const HOTEL_PRINCE_DIAMOND: HotelMeta = {
         "Closet",
         "Chair",
         "Telephone",
-        "Minibar",
       ],
-      photos: ["/promotion-room.jpg"],
+      photos: [
+        "/sd-bathroom.jpg",
+        "/sd2.jpg",
+        "/sd-3.jpg",
+        "/sd5.jpg",
+        "/sd6.jpg",
+      ],
       occupancy: { adults: 2 },
       ratePlans: [
         {
           id: "premium-ro",
           name: "Room Only",
           refundable: false,
-          perks: ["No meals included", "Free Wi‑Fi"],
-          cancellationPolicy: "Non‑refundable rate.",
-          price: 2340,
+          price: 2218,
           currency: "INR",
           ctaLabel: "BOOK NOW",
+          listPrice: 3690, // crossed MRP to match right rail
         },
         {
           id: "premium-bb",
           name: "Room with Breakfast",
           refundable: false,
-          perks: ["Breakfast included", "Free Wi‑Fi"],
-          cancellationPolicy: "Non‑refundable rate.",
-          price: 3140,
+          perks: ["Breakfast included"],
+          price: 2975,
           currency: "INR",
           ctaLabel: "BOOK NOW",
+          listPrice: 4950, // crossed MRP to match right rail
         },
       ],
     },
@@ -237,4 +244,4 @@ export const HOTEL_PRINCE_DIAMOND: HotelMeta = {
       city: "Varanasi",
     },
   ],
-}
+};
