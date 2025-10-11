@@ -2,7 +2,7 @@ import type { HotelMeta } from "@/types/hotel";
 
 export const HOTEL_PRINCE_DIAMOND: HotelMeta = {
   id: "hotel-prince-diamond",
-  name: "Hotel Prince Diamond Varanasi",
+  name: "Hotel Prince Diamond ",
   city: "Varanasi",
   country: "India",
   rating: 4.6,

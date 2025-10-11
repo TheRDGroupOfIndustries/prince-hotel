@@ -4,6 +4,26 @@ import { Gallery } from "./gallery";
 import { Card } from "@/components/base/card";
 import { Button } from "@/components/base/button";
 import type { RatePlan, RoomType } from "@/types/hotel";
+import { Star, Check, MapPin, Dot, Award, ShieldCheck } from "lucide-react";
+
+// Star rating renderer
+const StarRating = ({ rating }: { rating: number }) => {
+  const totalStars = 5;
+  const fullStars = Math.floor(rating);
+
+  return (
+    <div className="flex items-center">
+      {[...Array(totalStars)].map((_, i) => (
+        <Star
+          key={i}
+          className={`h-5 w-5 ${
+            i < fullStars ? "text-yellow-400 fill-yellow-400" : "text-gray-300"
+          }`}
+        />
+      ))}
+    </div>
+  );
+};
 
 interface Props {
   images: string[];
@@ -22,6 +42,7 @@ interface Props {
   featured: {
     room: RoomType;
     plan: RatePlan;
+    taxesAndFees: number;
   };
 }
 
@@ -29,74 +50,180 @@ export function HeroBooking({ images, hotel, featured }: Props) {
   const fmt = new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: hotel.currency,
+    minimumFractionDigits: 0,
   });
+
   const otherPlansCount = Math.max(
     (featured.room?.ratePlans?.length ?? 0) - 1,
     0
   );
 
   return (
-    <Card className="p-4 md:p-5">
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div className="md:col-span-2">
-          <Gallery images={images} />
+    <div className="bg-slate-50 p-4 rounded-lg">
+      {/* Hotel Name and Rating */}
+      <div className="mb-4">
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
+            {hotel.name}
+          </h1>
+          <div className="scale-90 sm:scale-100">
+            <StarRating rating={hotel.rating} />
+          </div>
         </div>
+      </div>
 
-        <aside className="md:col-span-1 space-y-3">
-          {/* Right booking card cloned from screenshot */}
-          <Card className="space-y-3 p-4">
-            <div>
-              <h3 className="text-base font-semibold">{featured.room.name}</h3>
-              <p className="text-xs text-muted-foreground">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Left Column: Gallery, About, Booking (on small), Amenities */}
+        <div className="lg:col-span-2 space-y-4">
+          <Gallery images={images} />
+
+          <ul className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-600">
+            <li className="flex items-center gap-1.5">
+              <Award className="h-4 w-4 text-blue-600" /> Great Choice!
+            </li>
+            <li className="flex items-center gap-1.5">
+              <ShieldCheck className="h-4 w-4 text-green-600" /> Best Price
+              Guarantee
+            </li>
+          </ul>
+
+          <hr className="my-4" />
+
+          {/* About Property */}
+          <div>
+            <h2 className="text-xl font-bold text-gray-800 mb-3">
+              About Property
+            </h2>
+            <p className="text-sm text-gray-600 leading-relaxed">
+              {hotel.aboutText ??
+                "Experience a wonderful stay at our hotel, designed to provide comfort and convenience for all our guests. With modern amenities and a welcoming atmosphere, we aim to make your visit memorable. Our location offers easy access to the city's main attractions, making it an ideal choice for both leisure and business travelers."}
+            </p>
+          </div>
+
+          {/* Book Now section (visible only on small screens) */}
+          <div className="block lg:hidden">
+            <Card className="p-4 border shadow-sm mt-4">
+              <h3 className="text-xl font-bold text-gray-900">
+                {featured.room.name}
+              </h3>
+              <p className="text-base text-gray-800 mt-1">
                 Fits {featured.room.occupancy.adults}{" "}
                 {featured.room.occupancy.adults > 1 ? "Adults" : "Adult"}
               </p>
-              <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                {featured.plan.perks?.slice(0, 2).map((p) => (
-                  <span
-                    key={p}
-                    className="rounded-md bg-secondary px-2 py-0.5 text-secondary-foreground"
+
+              <ul className="mt-1 space-y-1 text-sm">
+                <li className="flex items-center gap-2">
+                  <Dot className="h-6 w-6 text-gray-400 flex-shrink-0" />
+                  <span>No meals included</span>
+                </li>
+                {featured.plan.refundable && (
+                  <li className="flex items-center gap-2 text-teal-700 font-semibold">
+                    <Check className="h-5 w-5 flex-shrink-0" />
+                    <span>Free Cancellation till 24 hrs before check in</span>
+                  </li>
+                )}
+              </ul>
+
+              <div className="mt-3">
+                <p className="text-sm mb-1">
+                  {featured.plan.listPrice && (
+                    <span className="line-through text-gray-500 mr-2">
+                      {fmt.format(featured.plan.listPrice)}
+                    </span>
+                  )}
+                  <span>Per Night:</span>
+                </p>
+                <div className="flex items-center gap-2">
+                  <div className="text-3xl font-extrabold text-gray-900">
+                    {fmt.format(featured.plan.price)}
+                  </div>
+                  <span className="text-base text-gray-700 self-end mb-1">
+                    + {fmt.format(featured.taxesAndFees)} taxes & fees
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-4 flex items-center gap-5">
+                <Button className="flex-1 bg-blue-500 text-white font-bold text-base hover:bg-blue-400 py-3 rounded-md">
+                  BOOK THIS NOW
+                </Button>
+                {otherPlansCount > 0 && (
+                  <a
+                    href="#available-rooms"
+                    className="text-sm font-semibold text-blue-600 hover:underline whitespace-nowrap"
                   >
-                    {p}
-                  </span>
-                ))}
-                {featured.plan.refundable ? (
-                  <span className="rounded-md bg-secondary px-2 py-0.5 text-secondary-foreground">
-                    Free Cancellation
-                  </span>
-                ) : (
-                  <span className="rounded-md bg-destructive/10 px-2 py-0.5 text-destructive-foreground">
-                    Non-Refundable
-                  </span>
+                    {otherPlansCount} More Options
+                  </a>
                 )}
               </div>
-            </div>
+            </Card>
+          </div>
 
-            <div className="flex items-end justify-between gap-3">
-              <div />
-              <div className="text-right">
+          {/* Amenities */}
+          <div className="pt-4">
+            <h2 className="text-xl font-bold text-gray-800 mb-3">Amenities</h2>
+            <ul className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3 text-sm text-gray-700">
+              {hotel.amenitiesHighlights.map((amenity) => (
+                <li key={amenity} className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-600" />
+                  <span>{amenity}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* Right Column: Booking & Info Cards (hidden on small screens) */}
+        <aside className="hidden lg:block lg:col-span-1 space-y-4">
+          <Card className="p-4 border shadow-sm">
+            <h3 className="text-xl font-bold text-gray-900">
+              {featured.room.name}
+            </h3>
+            <p className="text-base text-gray-800 mt-1">
+              Fits {featured.room.occupancy.adults}{" "}
+              {featured.room.occupancy.adults > 1 ? "Adults" : "Adult"}
+            </p>
+
+            <ul className="mt-1 space-y-1 text-sm">
+              <li className="flex items-center gap-2">
+                <Dot className="h-6 w-6 text-gray-400 flex-shrink-0" />
+                <span>No meals included</span>
+              </li>
+              {featured.plan.refundable && (
+                <li className="flex items-center gap-2 text-teal-700 font-semibold">
+                  <Check className="h-5 w-5 flex-shrink-0" />
+                  <span>Free Cancellation till 24 hrs before check in</span>
+                </li>
+              )}
+            </ul>
+
+            <div className="mt-3">
+              <p className="text-sm mb-1">
                 {featured.plan.listPrice && (
-                  <div className="text-xs text-muted-foreground line-through">
+                  <span className="line-through text-gray-500 mr-2">
                     {fmt.format(featured.plan.listPrice)}
-                  </div>
+                  </span>
                 )}
-                <div className="text-2xl font-bold">
+                <span>Per Night:</span>
+              </p>
+              <div className="flex items-center gap-2">
+                <div className="text-3xl font-extrabold text-gray-900">
                   {fmt.format(featured.plan.price)}
                 </div>
-                <div className="text-[11px] text-muted-foreground">
-                  Per Night • Taxes & fees extra
-                </div>
+                <span className="text-base text-gray-700 self-end mb-1">
+                  + {fmt.format(featured.taxesAndFees)} taxes & fees
+                </span>
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-3">
-              <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
+            <div className="mt-4 flex items-center gap-5">
+              <Button className="flex-1 bg-blue-500 text-white font-bold text-base hover:bg-blue-400 py-3 rounded-md">
                 BOOK THIS NOW
               </Button>
               {otherPlansCount > 0 && (
                 <a
                   href="#available-rooms"
-                  className="text-xs text-accent underline"
+                  className="text-sm font-semibold text-blue-600 hover:underline whitespace-nowrap"
                 >
                   {otherPlansCount} More Options
                 </a>
@@ -104,87 +231,53 @@ export function HeroBooking({ images, hotel, featured }: Props) {
             </div>
           </Card>
 
-          {/* Mini reviews card */}
-          <Card className="flex items-center justify-between p-3">
-            <div className="flex items-center gap-2">
-              <span className="bg-primary text-primary-foreground px-2 py-1 rounded-full text-xs">
-                {hotel.rating.toFixed(1)}
-              </span>
-              <div className="text-sm">
-                <span className="font-medium">{hotel.ratingLabel}</span>{" "}
-                <span className="text-muted-foreground">
-                  ({hotel.reviewCount} ratings)
+          <Card className="p-3 border shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="bg-blue-600 text-white font-bold text-lg rounded-md px-3 py-1">
+                  {hotel.rating.toFixed(1)}
                 </span>
-              </div>
-            </div>
-            <a href="#reviews" className="text-xs text-accent underline">
-              All Reviews
-            </a>
-          </Card>
-
-          {/* Mini location card */}
-          {hotel.nearestLandmark && (
-            <Card className="flex items-center justify-between p-3">
-              <div>
-                <div className="text-sm font-medium">
-                  {hotel.nearestLandmark.name}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {hotel.nearestLandmark.blurb}
+                <div>
+                  <p className="font-bold text-gray-800">{hotel.ratingLabel}</p>
+                  <p className="text-xs text-gray-500">
+                    ({hotel.reviewCount} RATINGS)
+                  </p>
                 </div>
               </div>
-              <a href="#map" className="text-xs text-accent underline">
-                See on Map
-              </a>
-            </Card>
-          )}
-        </aside>
-      </section>
-
-      {/* Promo badges row under gallery (optional, subtle) */}
-      <div className="mt-4 flex flex-wrap gap-2">
-        <span className="rounded-full bg-secondary px-3 py-1 text-xs">
-          Great Choice!
-        </span>
-        <span className="rounded-full bg-secondary px-3 py-1 text-xs">
-          As seen on Google
-        </span>
-      </div>
-
-      {/* About and Amenities inside the same card */}
-      <div className="mt-4 grid grid-cols-1 gap-6 md:grid-cols-3">
-        <div className="md:col-span-2 space-y-2">
-          <h4 className="text-sm font-semibold">About Property</h4>
-          <p className="text-sm text-muted-foreground">
-            {hotel.aboutText ??
-              "Experience warm hospitality at Prince Diamond with comfortable rooms, modern amenities, and easy access to city landmarks."}{" "}
-            <a href="#" className="text-accent underline">
-              Read more
-            </a>
-          </p>
-        </div>
-        <div className="md:col-span-1 space-y-2">
-          <h4 className="text-sm font-semibold">Amenities</h4>
-          <ul className="grid grid-cols-2 gap-2 text-xs">
-            {hotel.amenitiesHighlights.slice(0, 8).map((a) => (
-              <li
-                key={a}
-                className="rounded-md bg-secondary px-2 py-1 text-secondary-foreground"
+              <a
+                href="#reviews"
+                className="text-sm font-semibold text-blue-600 hover:underline whitespace-nowrap"
               >
-                {a}
-              </li>
-            ))}
-          </ul>
-          {hotel.amenitiesHighlights.length > 8 && (
-            <a
-              href="#amenities"
-              className="mt-2 inline-block text-xs text-accent underline"
-            >
-              + More Amenities
-            </a>
-          )}
-        </div>
+                All Reviews
+              </a>
+            </div>
+
+            {hotel.nearestLandmark && <div className="border-t my-3" />}
+
+            {hotel.nearestLandmark && (
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <MapPin className="h-6 w-6 text-gray-500 mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold text-gray-800">
+                      {hotel.nearestLandmark.name}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {hotel.nearestLandmark.blurb}
+                    </p>
+                  </div>
+                </div>
+                <a
+                  href="#map"
+                  className="text-sm font-semibold text-blue-600 hover:underline whitespace-nowrap"
+                >
+                  See on Map
+                </a>
+              </div>
+            )}
+          </Card>
+        </aside>
       </div>
-    </Card>
+    </div>
   );
 }

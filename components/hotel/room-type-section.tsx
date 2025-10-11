@@ -28,9 +28,10 @@ export function RoomTypeSection({ room }: Props) {
 
   return (
     <section className="rounded-lg border bg-card">
-      <div className="grid grid-cols-1 gap-6 p-4 md:grid-cols-3 lg:gap-8 lg:p-6">
-        {/* Image Carousel */}
-        <div className="md:col-span-1 relative">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-0 lg:p-6">
+        {/* Left Section (Image + Info) */}
+        <div className="md:col-span-1 relative border-b md:border-b-0 md:border-r border-border p-4 lg:p-6">
+          {/* Image Carousel */}
           <div className="relative h-64 w-full sm:h-72 md:h-80 lg:h-96">
             <Image
               src={room.photos[currentIndex] || "/placeholder.svg"}
@@ -86,17 +87,18 @@ export function RoomTypeSection({ room }: Props) {
           </a>
         </div>
 
-        {/* Rate Plans */}
-        <div className="flex flex-col gap-3 md:col-span-2">
-          {room.ratePlans.map((plan) => (
-            <RoomPlanCard key={plan.id} plan={plan} roomName={room.name} />
+        {/* Right Section (Rate Plans) */}
+        <div className="flex flex-col md:col-span-2 divide-y divide-border">
+          {room.ratePlans.map((plan, index) => (
+            <div key={plan.id} className={index === 0 ? "" : ""}>
+              <RoomPlanCard plan={plan} roomName={room.name} />
+            </div>
           ))}
         </div>
       </div>
 
       <Card className="m-4 p-3 text-xs sm:text-sm text-muted-foreground">
-        Taxes and fees may vary by dates and occupancy. Final price shown at
-        checkout.
+        Taxes and fees may vary by dates and occupancy. Final price shown at checkout.
       </Card>
     </section>
   );

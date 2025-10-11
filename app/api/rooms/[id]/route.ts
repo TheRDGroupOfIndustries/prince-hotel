@@ -1,0 +1,50 @@
+import { NextResponse, type NextRequest } from "next/server"
+import dbConnect from "@/lib/mongodb"
+import { Room, type IRoom } from "@/models/room"
+import { Types } from "mongoose"
+
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  await dbConnect();
+  const id = params.id
+  const isObjectId = Types.ObjectId.isValid(id)
+  const room = isObjectId ? await Room.findById(id).lean() : await Room.findOne({ slug: id }).lean()
+  if (!room) return NextResponse.json({ error: "Room not found" }, { status: 404 })
+  return NextResponse.json({ data: room })
+}
+
+export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+  await dbConnect();
+  let payload: Partial<IRoom>
+  try {
+    payload = await req.json()
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
+  }
+
+  const id = params.id
+  const query = Types.ObjectId.isValid(id) ? { _id: id } : { slug: id }
+
+  try {
+    const updated = await Room.findOneAndUpdate(query, payload, {
+      new: true,
+      runValidators: true,
+    }).lean()
+    if (!updated) return NextResponse.json({ error: "Room not found" }, { status: 404 })
+    return NextResponse.json({ data: updated })
+  } catch (err: any) {
+    const msg = err?.code === 11000 ? "Duplicate slug. Provide a unique slug." : err?.message || "Failed to update room"
+    return NextResponse.json({ error: msg }, { status: 400 })
+  }
+}
+
+export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+  await dbConnect();
+  const id = params.id
+  const query = Types.ObjectId.isValid(id) ? { _id: id } : { slug: id }
+
+  const removed = await Room.findOneAndDelete(query).lean()
+  if (!removed) {
+    return NextResponse.json({ error: "Room not found" }, { status: 404 })
+  }
+  return NextResponse.json({ data: removed })
+}
