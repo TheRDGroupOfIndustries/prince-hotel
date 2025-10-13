@@ -62,14 +62,15 @@ export function HeroBooking({ images, hotel, featured }: Props) {
     <div className="bg-slate-50 p-4 rounded-lg">
       {/* Hotel Name and Rating */}
       <div className="mb-4">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
-            {hotel.name}
-          </h1>
-          <div className="scale-90 sm:scale-100">
-            <StarRating rating={hotel.rating} />
-          </div>
-        </div>
+       <div className="flex items-center gap-2 sm:gap-3 flex-nowrap overflow-hidden">
+  <h1 className="text-xl sm:text-3xl font-bold text-gray-800 truncate">
+    {hotel.name}
+  </h1>
+  <div className="flex-shrink-0 scale-90 sm:scale-100">
+    <StarRating rating={hotel.rating} />
+  </div>
+</div>
+
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

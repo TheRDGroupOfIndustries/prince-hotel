@@ -1,9 +1,11 @@
+// components/hotel/rooms-from-api.tsx
 "use client"
 
 import useSWR from "swr"
 import Image from "next/image"
 import { Card } from "@/components/base/card"
 import { RoomPlanCard } from "@/components/hotel/room-plan-card"
+import { useRouter } from "next/navigation"
 
 type ApiPlan = {
   title?: string
@@ -59,7 +61,25 @@ function normalizePlan(p: ApiPlan) {
 }
 
 export default function RoomsFromApi() {
+  const router = useRouter()
   const { data, error, isLoading } = useSWR<ApiRoom[]>("/api/rooms", fetcher)
+
+  const handleBookNow = (plan: any, roomName: string, roomPhoto?: string, roomAmenities?: string[]) => {
+    const bookingData = {
+      roomName,
+      plan: plan.name,
+      price: plan.price,
+      originalPrice: plan.originalPrice,
+      currency: plan.currency,
+      perks: plan.perks,
+      cancellationPolicy: plan.cancellationPolicy,
+      roomPhoto: roomPhoto || "https://r2imghtlak.mmtcdn.com/r2-mmt-htl-image/htl-imgs/202407231708234688-d10e7d2d-5aa2-4d12-bc5a-542842fe52c2.jpg",
+      roomAmenities: roomAmenities || []
+    }
+    
+    const queryString = `?data=${encodeURIComponent(JSON.stringify(bookingData))}`
+    router.push(`/booking${queryString}`)
+  }
 
   if (isLoading) return <div className="text-sm text-muted-foreground">Loading rooms…</div>
   if (error) return <div className="text-sm text-red-600">Failed to load rooms.</div>
@@ -90,6 +110,9 @@ export default function RoomsFromApi() {
                     roomName={room.name}
                     isSuperBadge
                     superHeadline={undefined}
+                    onBookNow={(plan) => handleBookNow(plan, room.name, room.photos[0], room.amenityBullets)}
+                    roomPhoto={room.photos[0]}
+                    roomAmenities={room.amenityBullets}
                   />
                 </div>
               </div>
@@ -141,6 +164,9 @@ export default function RoomsFromApi() {
                           roomName={room.name}
                           isSuperBadge={!!plan.isSuperPackage}
                           superHeadline={plan.isSuperPackage ? plan.superPackageHeadline : undefined}
+                          onBookNow={(plan) => handleBookNow(plan, room.name, room.photos[0], room.amenityBullets)}
+                          roomPhoto={room.photos[0]}
+                          roomAmenities={room.amenityBullets}
                         />
                       </div>
                     ))}
@@ -157,6 +183,9 @@ export default function RoomsFromApi() {
                           roomName={room.name}
                           isSuperBadge={!!plan.isSuperPackage}
                           superHeadline={plan.isSuperPackage ? plan.superPackageHeadline : undefined}
+                          onBookNow={(plan) => handleBookNow(plan, room.name, room.photos[0], room.amenityBullets)}
+                          roomPhoto={room.photos[0]}
+                          roomAmenities={room.amenityBullets}
                         />
                       </div>
                     ))}

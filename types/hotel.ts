@@ -8,7 +8,8 @@ export interface RatePlan {
   cancellationPolicy?: string
   price: number // per night inclusive of taxes (display)
   currency: Currency
-  ctaLabel?: string
+  ctaLabel?: string,
+  originalPrice?: number
   listPrice?: number // optional crossed MRP shown in hero/right rail
 }
 

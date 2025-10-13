@@ -15,7 +15,7 @@ export default function Page() {
   const featuredPlan = featuredRoom.ratePlans[0]
 
   return (
-    <main className="container mx-auto max-w-6xl space-y-8 px-4 py-6">
+    <main className="container mx-auto max-w-6xl space-y-4 px-4 py-6">
       <HotelHeader
         name={hotel.name}
         city={hotel.city}
@@ -28,7 +28,7 @@ export default function Page() {
         logo={hotel.logo}
       />
 
-      <HeroBooking
+      <HeroBooking 
         images={hotel.heroPhotos}
         hotel={{
           name: hotel.name,
