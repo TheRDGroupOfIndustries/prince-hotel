@@ -1,4 +1,3 @@
-// app/booking/page.tsx
 "use client"
 
 import { useState, useEffect } from 'react'
@@ -11,7 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { format, differenceInDays } from 'date-fns'
-import { CalendarIcon, Plus, Minus, Mail, Phone, Star, CheckCircle, Info } from 'lucide-react'
+import { CalendarIcon, Plus, Minus, Mail, Phone, Star, CheckCircle, Info, Loader2 } from 'lucide-react'
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 interface Guest {
   id: string
@@ -51,15 +56,14 @@ export default function BookingPage() {
   ])
   const [totalNights, setTotalNights] = useState(2)
   const [totalPrice, setTotalPrice] = useState(0)
+  const [isProcessing, setIsProcessing] = useState(false)
 
   useEffect(() => {
     const dataParam = searchParams.get('data')
-    console.log('Data param:', dataParam) // Debug log
     
     if (dataParam) {
       try {
         const data = JSON.parse(dataParam)
-        console.log('Parsed booking data:', data) // Debug log
         setBookingData(data)
         setTotalPrice(data.price * totalNights)
       } catch (error) {
@@ -106,23 +110,139 @@ export default function BookingPage() {
     ))
   }
 
-  const handlePayNow = () => {
-    if (!bookingData) return
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  }
 
-    const bookingDetails = {
-      hotel: "Hotel Prince Diamond Varanasi",
-      room: bookingData.roomName,
-      plan: bookingData.plan,
-      checkIn: format(checkInDate, 'EEE dd MMM yyyy'),
-      checkOut: format(checkOutDate, 'EEE dd MMM yyyy'),
-      nights: totalNights,
-      guests: guests.length,
-      totalPrice: totalPrice * 1.18, // Including taxes
-      currency: bookingData.currency,
-      guestDetails: guests
-    }
+  const handlePayNow = async () => {
+    if (!bookingData) return;
+
+    setIsProcessing(true);
+
+    try {
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        alert('Razorpay SDK failed to load. Please check your connection.');
+        setIsProcessing(false);
+        return;
+      }
+
+      // Create order
+      const orderResponse = await fetch('/api/create-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          hotelName: "Hotel Prince Diamond Varanasi",
+          roomName: bookingData.roomName,
+          plan: bookingData.plan,
+          checkIn: checkInDate.toISOString(),
+          checkOut: checkOutDate.toISOString(),
+          nights: totalNights,
+          guests: guests.map(guest => ({
+            title: guest.title,
+            firstName: guest.firstName,
+            lastName: guest.lastName,
+            email: guest.email,
+            phone: guest.phone
+          })),
+          roomPrice: bookingData.price * totalNights,
+          taxes: bookingData.price * totalNights * 0.18,
+          totalAmount: bookingData.price * totalNights * 1.18,
+          currency: bookingData.currency
+        }),
+      });
+
+      const orderData = await orderResponse.json();
+
+      if (!orderData.success) {
+        throw new Error(orderData.error || 'Failed to create order');
+      }
+
     
-    alert(`Payment initiated!\n\nBooking Details:\n${JSON.stringify(bookingDetails, null, 2)}`)
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: orderData.order.amount,
+        currency: orderData.order.currency,
+        name: 'Hotel Prince Diamond Varanasi',
+        description: `Booking for ${bookingData.roomName} - ${bookingData.plan}`,
+        image: '/logo.png',
+        order_id: orderData.order.id,
+        handler: async function (response: any) {
+          // Verify payment
+          const verificationResponse = await fetch('/api/verify-payment', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            }),
+          });
+
+          const verificationData = await verificationResponse.json();
+
+          if (verificationData.success) {
+           await fetch('/api/send-mail', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: guests[0].firstName + " " + guests[0].lastName,
+        email: guests[0].email,
+        phone: guests[0].phone,
+        roomName: bookingData.roomName,
+        plan: bookingData.plan,
+        checkIn: checkInDate.toISOString(),
+        checkOut: checkOutDate.toISOString(),
+        nights: totalNights,
+        guests,
+        totalAmount: bookingData.price * totalNights * 1.18,
+        currency: bookingData.currency,
+        orderId: orderData.order.id,
+        paymentId: response.razorpay_payment_id
+      }),
+    });
+            // Redirect to success page or home
+            window.location.href = '/booking-success';
+          } else {
+            alert('Payment verification failed. Please contact support.');
+          }
+        },
+        prefill: {
+          name: `${guests[0].firstName} ${guests[0].lastName}`,
+          email: guests[0].email,
+          contact: guests[0].phone,
+        },
+        notes: {
+          address: "Hotel Prince Diamond Varanasi",
+        },
+        theme: {
+          color: '#3399cc',
+        },
+        modal: {
+          ondismiss: function() {
+            setIsProcessing(false);
+          }
+        }
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+      
+    } catch (error) {
+      console.error('Payment error:', error);
+      alert('Payment failed. Please try again.');
+      setIsProcessing(false);
+    }
   }
 
   const fmt = new Intl.NumberFormat("en-IN", {
@@ -130,7 +250,6 @@ export default function BookingPage() {
     currency: bookingData?.currency || "INR",
   })
 
-  // Show loading state
   if (!bookingData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -171,7 +290,6 @@ export default function BookingPage() {
                         <Star key={i} className="w-4 h-4 fill-current" />
                       ))}
                     </div>
-                    
                   </div>
                   <p className="text-gray-600 mt-2 text-sm">
                     Building No. 217/3, Dakshini Kakarmatta, DLW Road Kakarmatta Varanasi Uttar Pradesh 221010, Varanasi, India
@@ -251,16 +369,6 @@ export default function BookingPage() {
                       </ul>
                     </div>
                   )}
-
-                  {/* <div className="mt-4">
-                    <p className="font-semibold text-red-600">Non-Refundable</p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Refund is not applicable for this booking
-                    </p>
-                    <button className="text-blue-600 text-sm font-semibold mt-2">
-                      Cancellation policy details
-                    </button>
-                  </div> */}
                 </div>
                 <button className="text-blue-600 font-semibold">See Inclusions</button>
               </div>
@@ -436,15 +544,6 @@ export default function BookingPage() {
                   </div>
                 ))}
               </div>
-
-              {/* <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                <p className="text-sm text-blue-700 text-center">
-                  Login to prefill traveller details and get access to secret deals
-                </p>
-                <Button variant="outline" className="w-full mt-2">
-                  LOGIN
-                </Button>
-              </div> */}
             </Card>
           </div>
 
@@ -484,9 +583,16 @@ export default function BookingPage() {
               <Button 
                 className="w-full mt-6 py-3 text-lg"
                 onClick={handlePayNow}
-                disabled={!guests[0].firstName || !guests[0].lastName || !guests[0].email || !guests[0].phone}
+                disabled={!guests[0].firstName || !guests[0].lastName || !guests[0].email || !guests[0].phone || isProcessing}
               >
-                Pay Now
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  'Pay Now'
+                )}
               </Button>
 
               {/* Important Information */}

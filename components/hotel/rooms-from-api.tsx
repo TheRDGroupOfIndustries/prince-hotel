@@ -6,7 +6,8 @@ import Image from "next/image"
 import { Card } from "@/components/base/card"
 import { RoomPlanCard } from "@/components/hotel/room-plan-card"
 import { useRouter } from "next/navigation"
-
+import { ChevronLeft, ChevronRight } from "lucide-react"
+import { useState } from "react"
 type ApiPlan = {
   title?: string
   name?: string
@@ -120,20 +121,16 @@ export default function RoomsFromApi() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
               <div className="p-5 border-b lg:border-b-0 lg:border-r border-gray-200 bg-card">
-                {room.photos?.[0] ? (
-                  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg">
-                    <Image
-                      src={room.photos[0] || "/placeholder.svg?height=240&width=320&query=room-photo"}
-                      alt={`${room.name} photo`}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div className="h-40 rounded-lg bg-muted flex items-center justify-center text-sm text-muted-foreground">
-                    No photo
-                  </div>
-                )}
+                {room.photos?.length ? (
+  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg group">
+    {/* track current image index */}
+    <RoomImageSlider images={room.photos} roomName={room.name} />
+  </div>
+) : (
+  <div className="h-40 rounded-lg bg-muted flex items-center justify-center text-sm text-muted-foreground">
+    No photo
+  </div>
+)}
                 <h3 className="mt-4 font-semibold text-xl text-foreground">{room.name}</h3>
                 <div className="mt-2 grid grid-cols-2 gap-2 text-sm text-muted-foreground">
                   {room.sizeSqft ? <div>• {room.sizeSqft} sq.ft</div> : null}
@@ -196,6 +193,54 @@ export default function RoomsFromApi() {
           </Card>
         )
       })}
+    </div>
+  )
+}
+function RoomImageSlider({ images, roomName }: { images: string[]; roomName: string }) {
+  const [index, setIndex] = useState(0)
+
+  const nextImage = () => setIndex((prev) => (prev + 1) % images.length)
+  const prevImage = () => setIndex((prev) => (prev - 1 + images.length) % images.length)
+
+  return (
+    <div className="relative w-full h-full">
+      <Image
+        key={images[index]}
+        src={images[index]}
+        alt={`${roomName} photo ${index + 1}`}
+        fill
+        className="object-cover transition-all duration-500"
+      />
+
+      {/* Controls */}
+      {images.length > 1 && (
+        <>
+          <button
+            onClick={prevImage}
+            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button
+            onClick={nextImage}
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+
+          {/* Dots indicator */}
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+            {images.map((_, i) => (
+              <div
+                key={i}
+                className={`w-2 h-2 rounded-full transition ${
+                  i === index ? "bg-white" : "bg-white/50"
+                }`}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
 }
