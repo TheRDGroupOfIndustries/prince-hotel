@@ -5,6 +5,7 @@ import { Card } from "@/components/base/card";
 import { Button } from "@/components/base/button";
 import type { RatePlan, RoomType } from "@/types/hotel";
 import { Star, Check, MapPin, Dot, Award, ShieldCheck } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 // Star rating renderer
 const StarRating = ({ rating }: { rating: number }) => {
@@ -47,6 +48,7 @@ interface Props {
 }
 
 export function HeroBooking({ images, hotel, featured }: Props) {
+  const router = useRouter();
   const fmt = new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: hotel.currency,
@@ -58,12 +60,33 @@ export function HeroBooking({ images, hotel, featured }: Props) {
     0
   );
 
+  const handleBookNow = () => {
+    const bookingData = {
+      roomName: featured.room.name,
+      plan: featured.plan.name || "Featured Plan",
+      price: featured.plan.price,
+      originalPrice: featured.plan.listPrice,
+      currency: hotel.currency,
+      perks: featured.plan.perks || [
+        featured.plan.refundable ? "Free Cancellation till 24 hrs before check in" : "No meals included"
+      ],
+      cancellationPolicy: featured.plan.refundable 
+        ? "Free Cancellation till 24 hrs before check in" 
+        : "Non-refundable",
+      roomPhoto: images[0] || "https://r2imghtlak.mmtcdn.com/r2-mmt-htl-image/htl-imgs/202407231708234688-d10e7d2d-5aa2-4d12-bc5a-542842fe52c2.jpg",
+      roomAmenities: hotel.amenitiesHighlights || []
+    };
+    
+    const queryString = `?data=${encodeURIComponent(JSON.stringify(bookingData))}`;
+    router.push(`/booking${queryString}`);
+  };
+
   return (
     <div className="bg-slate-50 p-4 rounded-lg">
       {/* Hotel Name and Rating */}
       <div className="mb-4">
-       <div className="flex items-center gap-2 sm:gap-3 flex-nowrap overflow-hidden">
-  <h1 className="text-xl sm:text-3xl font-bold text-gray-800 truncate">
+       <div className="flex items-center gap-2 sm:gap-3 flex-nowrap">
+  <h1 className="text-xl sm:text-3xl font-bold text-gray-800 whitespace-nowrap">
     {hotel.name}
   </h1>
   <div className="flex-shrink-0 scale-90 sm:scale-100">
@@ -145,7 +168,10 @@ export function HeroBooking({ images, hotel, featured }: Props) {
               </div>
 
               <div className="mt-4 flex items-center gap-5">
-                <Button className="flex-1 bg-blue-500 text-white font-bold text-base hover:bg-blue-400 py-3 rounded-md">
+                <Button 
+                  className="flex-1 bg-blue-500 text-white font-bold text-base hover:bg-blue-400 py-3 rounded-md"
+                  onClick={handleBookNow}
+                >
                   BOOK THIS NOW
                 </Button>
                 {otherPlansCount > 0 && (
@@ -218,7 +244,10 @@ export function HeroBooking({ images, hotel, featured }: Props) {
             </div>
 
             <div className="mt-4 flex items-center gap-5">
-              <Button className="flex-1 bg-blue-500 text-white font-bold text-base hover:bg-blue-400 py-3 rounded-md">
+              <Button 
+                className="flex-1 bg-blue-500 text-white font-bold text-base hover:bg-blue-400 py-3 rounded-md"
+                onClick={handleBookNow}
+              >
                 BOOK THIS NOW
               </Button>
               {otherPlansCount > 0 && (

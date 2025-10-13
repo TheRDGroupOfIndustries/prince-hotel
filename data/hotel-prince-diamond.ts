@@ -68,7 +68,7 @@ export const HOTEL_PRINCE_DIAMOND: HotelMeta = {
           id: "deluxe-ro",
           name: "Room Only",
           refundable: false, // Non-Refundable per screenshot
-          price: 1677,
+          price: 1736,
           currency: "INR",
           ctaLabel: "BOOK NOW",
           listPrice: 2790, // crossed MRP to match right rail
