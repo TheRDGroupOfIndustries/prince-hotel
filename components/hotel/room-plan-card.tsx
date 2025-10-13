@@ -1,22 +1,46 @@
+// components/hotel/room-plan-card.tsx
 "use client"
 import { Button } from "@/components/base/button"
 import type { RatePlan } from "@/types/hotel"
 import { CheckCircle, Info } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 interface Props {
   plan: RatePlan
   roomName: string
-  isSuperBadge?: boolean
+  isSuperBadge?: boolean,
+  
   superHeadline?: string
+  onBookNow?: (plan: RatePlan, roomName: string) => void
+  roomPhoto?: string
+  roomAmenities?: string[]
 }
 
-export function RoomPlanCard({ plan, roomName, isSuperBadge, superHeadline }: Props) {
+export function RoomPlanCard({ plan, roomName, isSuperBadge, superHeadline, onBookNow, roomPhoto, roomAmenities }: Props) {
+  const router = useRouter()
   const fmt = new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: plan.currency,
   })
 
   const filteredPerks = (plan.perks ?? []).filter((p) => !/refundable/i.test(p))
+
+  const handleBookNow = () => {
+    const bookingData = {
+      roomName,
+      plan: plan.name,
+      price: plan.price,
+      originalPrice: plan.originalPrice,
+      currency: plan.currency,
+      perks: plan.perks,
+      cancellationPolicy: plan.cancellationPolicy,
+      roomPhoto: roomPhoto || "https://r2imghtlak.mmtcdn.com/r2-mmt-htl-image/htl-imgs/202407231708234688-d10e7d2d-5aa2-4d12-bc5a-542842fe52c2.jpg",
+      roomAmenities: roomAmenities || []
+    }
+    
+    const queryString = `?data=${encodeURIComponent(JSON.stringify(bookingData))}`
+    router.push(`/booking${queryString}`)
+  }
 
   return (
     <div className="p-4 sm:p-5 shadow-sm hover:shadow-md transition-all duration-300">
@@ -56,7 +80,7 @@ export function RoomPlanCard({ plan, roomName, isSuperBadge, superHeadline }: Pr
         {/* Right Section — Price + CTA */}
         <div className="min-w-[160px] text-left sm:text-right flex flex-col justify-between border-t sm:border-t-0 sm:border-l border-gray-200 pt-3 sm:pt-0 sm:pl-4">
           <div>
-            {plan.originalPrice && (
+            {plan.originalPrice && plan.originalPrice > plan.price && (
               <div className="text-sm text-gray-400 line-through">{fmt.format(plan.originalPrice)}</div>
             )}
             <div className="text-lg sm:text-xl font-bold text-gray-900">{fmt.format(plan.price)}</div>
@@ -66,7 +90,7 @@ export function RoomPlanCard({ plan, roomName, isSuperBadge, superHeadline }: Pr
           <Button
             className="mt-3 sm:mt-4 w-full sm:w-auto text-sm"
             variant="accent"
-            onClick={() => alert(`Booking initiated: ${roomName} • ${plan.name} at ${fmt.format(plan.price)}`)}
+            onClick={handleBookNow}
           >
             {plan.ctaLabel ?? "BOOK NOW"}
           </Button>
