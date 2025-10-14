@@ -20,6 +20,8 @@ export const HOTEL_PRINCE_DIAMOND: HotelMeta = {
   heroPhotos: [
     "princehotel3.jpg",
     "princehotel2.jpg",
+    "sd2.jpg",
+    "sd6.jpg",
     "princehotel7.jpg",
     "princehotel1.jpg",
     "princehotel5.jpg",

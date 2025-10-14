@@ -4,7 +4,7 @@ import { HeroBooking } from "@/components/hotel/hero-booking"
 import { ReviewsSection } from "@/components/hotel/reviews-section"
 import { PropertyRules } from "@/components/hotel/property-rules"
 import { LocationMap } from "@/components/hotel/location-map"
-import { SimilarProperties } from "@/components/hotel/similar-properties"
+
 import { Card } from "@/components/base/card"
 import RoomsFromApi from "@/components/hotel/rooms-from-api"
 
@@ -15,7 +15,7 @@ export default function Page() {
   const featuredPlan = featuredRoom.ratePlans[0]
 
   return (
-    <main className="container mx-auto max-w-6xl space-y-4 px-4 py-6">
+    <main className="container mx-auto max-w-6xl space-y-2 px-3 py-3">
       <HotelHeader
         name={hotel.name}
         city={hotel.city}
@@ -42,7 +42,7 @@ export default function Page() {
           amenitiesHighlights: hotel.amenitiesHighlights,
           nearestLandmark: hotel.nearestLandmark,
         }}
-        featured={{ room: featuredRoom, plan: featuredPlan }}
+      
       />
 
       <section id="available-rooms" className="space-y-6">

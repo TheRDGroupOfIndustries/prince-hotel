@@ -6,8 +6,13 @@ import { Button } from "@/components/base/button";
 import type { RatePlan, RoomType } from "@/types/hotel";
 import { Star, Check, MapPin, Dot, Award, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Playfair_Display } from "next/font/google";
 
-// Star rating renderer
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["700"],
+});
+
 const StarRating = ({ rating }: { rating: number }) => {
   const totalStars = 5;
   const fullStars = Math.floor(rating);
@@ -40,64 +45,53 @@ interface Props {
     amenitiesHighlights: string[];
     nearestLandmark?: { name: string; blurb: string };
   };
-  featured: {
-    room: RoomType;
-    plan: RatePlan;
-    taxesAndFees: number;
-  };
+  // featured: {
+  //   room: RoomType;
+  //   plan: RatePlan;
+  //   taxesAndFees: number;
+  // };
 }
 
-export function HeroBooking({ images, hotel, featured }: Props) {
+export function HeroBooking({ images, hotel}: Props) {
   const router = useRouter();
+
   const fmt = new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: hotel.currency,
     minimumFractionDigits: 0,
   });
 
-  const otherPlansCount = Math.max(
-    (featured.room?.ratePlans?.length ?? 0) - 1,
-    0
-  );
+  
+ 
 
-  const handleBookNow = () => {
-    const bookingData = {
-      roomName: featured.room.name,
-      plan: featured.plan.name || "Featured Plan",
-      price: featured.plan.price,
-      originalPrice: featured.plan.listPrice,
-      currency: hotel.currency,
-      perks: featured.plan.perks || [
-        featured.plan.refundable ? "Free Cancellation till 24 hrs before check in" : "No meals included"
-      ],
-      cancellationPolicy: featured.plan.refundable 
-        ? "Free Cancellation till 24 hrs before check in" 
-        : "Non-refundable",
-      roomPhoto: images[0] || "https://r2imghtlak.mmtcdn.com/r2-mmt-htl-image/htl-imgs/202407231708234688-d10e7d2d-5aa2-4d12-bc5a-542842fe52c2.jpg",
-      roomAmenities: hotel.amenitiesHighlights || []
-    };
-    
-    const queryString = `?data=${encodeURIComponent(JSON.stringify(bookingData))}`;
-    router.push(`/booking${queryString}`);
+  const scrollToRooms = () => {
+    const el = document.getElementById("available-rooms");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   return (
     <div className="bg-slate-50 p-4 rounded-lg">
       {/* Hotel Name and Rating */}
-      <div className="mb-4">
-       <div className="flex items-center gap-2 sm:gap-3 flex-nowrap">
-  <h1 className="text-xl sm:text-3xl font-bold text-gray-800 whitespace-nowrap">
-    {hotel.name}
-  </h1>
-  <div className="flex-shrink-0 scale-90 sm:scale-100">
-    <StarRating rating={hotel.rating} />
+    <div className="mb-4">
+  <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-3 flex-nowrap">
+    <h1
+      className={`text-md sm:text-3xl font-bold text-gray-800 whitespace-nowrap ${playfair.className}`}
+    >
+      {hotel.name}
+    </h1>
+
+    <div className="flex-shrink-0 flex items-center space-x-1 scale-90 sm:scale-100">
+      <StarRating rating={hotel.rating} />
+     
+    </div>
   </div>
 </div>
 
-      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Left Column: Gallery, About, Booking (on small), Amenities */}
+        {/* Left Column */}
         <div className="lg:col-span-2 space-y-4">
           <Gallery images={images} />
 
@@ -124,64 +118,56 @@ export function HeroBooking({ images, hotel, featured }: Props) {
             </p>
           </div>
 
-          {/* Book Now section (visible only on small screens) */}
+          {/* Book Now section (mobile) */}
           <div className="block lg:hidden">
             <Card className="p-4 border shadow-sm mt-4">
-              <h3 className="text-xl font-bold text-gray-900">
-                {featured.room.name}
-              </h3>
-              <p className="text-base text-gray-800 mt-1">
-                Fits {featured.room.occupancy.adults}{" "}
-                {featured.room.occupancy.adults > 1 ? "Adults" : "Adult"}
-              </p>
+              <h3 className="text-xl font-bold text-gray-900">Premium Room</h3>
+              <p className="text-base text-gray-800 mt-1">Ideal for 2 Adults</p>
 
-              <ul className="mt-1 space-y-1 text-sm">
+              <ul className="mt-2 space-y-1 text-sm text-gray-700">
                 <li className="flex items-center gap-2">
-                  <Dot className="h-6 w-6 text-gray-400 flex-shrink-0" />
-                  <span>No meals included</span>
+                  <Dot className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                  <span>Base Price: ₹2100 for 2 Adults</span>
                 </li>
-                {featured.plan.refundable && (
-                  <li className="flex items-center gap-2 text-teal-700 font-semibold">
-                    <Check className="h-5 w-5 flex-shrink-0" />
-                    <span>Free Cancellation till 24 hrs before check in</span>
-                  </li>
-                )}
+                <li className="flex items-center gap-2">
+                  <Dot className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                  <span>Extra Adult: ₹300 per person</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Dot className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                  <span>Children below 9 years stay free</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Dot className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                  <span>Breakfast (optional): ₹300 per adult</span>
+                </li>
               </ul>
 
               <div className="mt-3">
-                <p className="text-sm mb-1">
-                  {featured.plan.listPrice && (
-                    <span className="line-through text-gray-500 mr-2">
-                      {fmt.format(featured.plan.listPrice)}
-                    </span>
-                  )}
-                  <span>Per Night:</span>
-                </p>
+                <p className="text-sm mb-1">Per Night:</p>
                 <div className="flex items-center gap-2">
-                  <div className="text-3xl font-extrabold text-gray-900">
-                    {fmt.format(featured.plan.price)}
-                  </div>
+                  <div className="text-2xl font-bold text-gray-900">₹1400</div>
                   <span className="text-base text-gray-700 self-end mb-1">
-                    + {fmt.format(featured.taxesAndFees)} taxes & fees
+                    + taxes & fees
                   </span>
                 </div>
               </div>
 
               <div className="mt-4 flex items-center gap-5">
-                <Button 
+                <Button
                   className="flex-1 bg-blue-500 text-white font-bold text-base hover:bg-blue-400 py-3 rounded-md"
-                  onClick={handleBookNow}
+                  onClick={scrollToRooms}
                 >
                   BOOK THIS NOW
                 </Button>
-                {otherPlansCount > 0 && (
-                  <a
-                    href="#available-rooms"
-                    className="text-sm font-semibold text-blue-600 hover:underline whitespace-nowrap"
-                  >
-                    {otherPlansCount} More Options
-                  </a>
-                )}
+
+                <Button
+                  onClick={scrollToRooms}
+                  variant="ghost"
+                  className="text-sm font-semibold text-blue-600 hover:underline whitespace-nowrap"
+                >
+                  See More Options
+                </Button>
               </div>
             </Card>
           </div>
@@ -200,64 +186,58 @@ export function HeroBooking({ images, hotel, featured }: Props) {
           </div>
         </div>
 
-        {/* Right Column: Booking & Info Cards (hidden on small screens) */}
+        {/* Right Column */}
         <aside className="hidden lg:block lg:col-span-1 space-y-4">
           <Card className="p-4 border shadow-sm">
-            <h3 className="text-xl font-bold text-gray-900">
-              {featured.room.name}
-            </h3>
-            <p className="text-base text-gray-800 mt-1">
-              Fits {featured.room.occupancy.adults}{" "}
-              {featured.room.occupancy.adults > 1 ? "Adults" : "Adult"}
-            </p>
+            <h3 className="text-xl font-bold text-gray-900">Premium Room</h3>
+            <p className="text-base text-gray-800 mt-1">Fits 2 Adults</p>
 
-            <ul className="mt-1 space-y-1 text-sm">
+            <ul className="mt-1 space-y-1 text-sm text-gray-700">
               <li className="flex items-center gap-2">
-                <Dot className="h-6 w-6 text-gray-400 flex-shrink-0" />
-                <span>No meals included</span>
+                <Dot className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                <span>Base Price: ₹2100 for 2 Adults</span>
               </li>
-              {featured.plan.refundable && (
-                <li className="flex items-center gap-2 text-teal-700 font-semibold">
-                  <Check className="h-5 w-5 flex-shrink-0" />
-                  <span>Free Cancellation till 24 hrs before check in</span>
-                </li>
-              )}
+              <li className="flex items-center gap-2">
+                <Dot className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                <span>Extra Adult: ₹300 per person</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Dot className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                <span>Children below 9 years stay free</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Dot className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                <span>Breakfast (optional): ₹300 per adult</span>
+              </li>
             </ul>
 
             <div className="mt-3">
               <p className="text-sm mb-1">
-                {featured.plan.listPrice && (
-                  <span className="line-through text-gray-500 mr-2">
-                    {fmt.format(featured.plan.listPrice)}
-                  </span>
-                )}
                 <span>Per Night:</span>
               </p>
               <div className="flex items-center gap-2">
-                <div className="text-3xl font-extrabold text-gray-900">
-                  {fmt.format(featured.plan.price)}
-                </div>
+                <div className="text-2xl font-bold text-gray-900">₹1400</div>
                 <span className="text-base text-gray-700 self-end mb-1">
-                  + {fmt.format(featured.taxesAndFees)} taxes & fees
+                  + taxes & fees
                 </span>
               </div>
             </div>
 
             <div className="mt-4 flex items-center gap-5">
-              <Button 
+              <Button
                 className="flex-1 bg-blue-500 text-white font-bold text-base hover:bg-blue-400 py-3 rounded-md"
-                onClick={handleBookNow}
+                onClick={scrollToRooms}
               >
                 BOOK THIS NOW
               </Button>
-              {otherPlansCount > 0 && (
-                <a
-                  href="#available-rooms"
-                  className="text-sm font-semibold text-blue-600 hover:underline whitespace-nowrap"
-                >
-                  {otherPlansCount} More Options
-                </a>
-              )}
+
+              <Button
+                onClick={scrollToRooms}
+                variant="ghost"
+                className="text-sm font-semibold text-blue-600 hover:underline whitespace-nowrap"
+              >
+                 See More Options
+              </Button>
             </div>
           </Card>
 
@@ -268,7 +248,9 @@ export function HeroBooking({ images, hotel, featured }: Props) {
                   {hotel.rating.toFixed(1)}
                 </span>
                 <div>
-                  <p className="font-bold text-gray-800">{hotel.ratingLabel}</p>
+                  <p className="font-bold text-gray-800">
+                    {hotel.ratingLabel}
+                  </p>
                   <p className="text-xs text-gray-500">
                     ({hotel.reviewCount} RATINGS)
                   </p>

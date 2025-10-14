@@ -5,14 +5,26 @@ interface Props {
 }
 
 export function LocationMap({ lat, lng, title }: Props) {
-  const src = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.02}%2C${lat - 0.02}%2C${lng + 0.02}%2C${lat + 0.02}&layer=mapnik&marker=${lat}%2C${lng}`
+  // Build the embed URL manually (no API key needed)
+  const src = `https://www.google.com/maps?q=${lat},${lng}&hl=en&z=15&output=embed`
+
   return (
     <section aria-label="Location">
       <h2 className="text-lg font-semibold">Location</h2>
       <div className="mt-3 overflow-hidden rounded-lg border">
-        <iframe title={`${title} map`} src={src} className="h-64 w-full" loading="lazy" />
+        <iframe
+          title={`${title} map`}
+          src={src}
+          className="h-64 w-full"
+          style={{ border: 0 }}
+          allowFullScreen
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+        />
       </div>
-      <p className="mt-2 text-sm text-muted-foreground">Approximate location shown for {title} in Varanasi.</p>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Approximate location shown for {title}.
+      </p>
     </section>
   )
 }
