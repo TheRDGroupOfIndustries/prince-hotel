@@ -1,12 +1,19 @@
-// app/api/send-mail/route.ts
+
 import nodemailer from "nodemailer";
+
+type Guest = {
+  title: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+};
 
 export async function POST(req: Request) {
   try {
     const {
       name,
       email,
-      phone,
       roomName,
       plan,
       checkIn,
@@ -15,6 +22,17 @@ export async function POST(req: Request) {
       guests,
       totalAmount,
       currency,
+    }: {
+      name: string;
+      email: string;
+      roomName: string;
+      plan: string;
+      checkIn: string;
+      checkOut: string;
+      nights: number;
+      guests: Guest[];
+      totalAmount: number;
+      currency: string;
     } = await req.json();
 
     // Configure transporter
@@ -30,8 +48,10 @@ export async function POST(req: Request) {
 
     const guestList = guests
       .map(
-        (g: any) =>
-          `<li>${g.title} ${g.firstName} ${g.lastName} (${g.email}, ${g.phone})</li>`
+        (g) =>
+          `<li>${g.title} ${g.firstName} ${g.lastName} (${g.email}${
+            g.phone ? `, ${g.phone}` : ""
+          })</li>`
       )
       .join("");
 

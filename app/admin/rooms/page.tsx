@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import useSWR from "swr"
 import { Card } from "@/components/base/card"
 import { Button } from "@/components/base/button"
+import { BookingsSection } from "@/components/admin/booking"
 
 type Plan = {
   title: string
@@ -289,12 +290,7 @@ export default function AdminRoomsPage() {
             </ul>
           </Card>
 
-          <Card className="p-4">
-            <div className="text-sm font-medium mb-1">Environment</div>
-            <p className="text-xs text-muted-foreground">
-              Set MONGODB_URI in Vars. No secrets should be committed to code.
-            </p>
-          </Card>
+         
         </aside>
 
         {/* Content */}
@@ -434,7 +430,7 @@ export default function AdminRoomsPage() {
                 <div className="pt-4 border-t">
                   <div className="flex items-center justify-between">
                     <h3 className="text-base font-medium text-foreground">Rate Plans</h3>
-                    <Button onClick={addPlan} variant="secondary">
+                    <Button onClick={addPlan} variant="accent">
                       Add Plan
                     </Button>
                   </div>
@@ -560,7 +556,7 @@ export default function AdminRoomsPage() {
                           </label>
                         </div>
                         <div className="mt-3 text-right">
-                          <Button variant="ghost" onClick={() => removePlan(i)}>
+                          <Button variant="outline" onClick={() => removePlan(i)}>
                             Remove
                           </Button>
                         </div>
@@ -610,7 +606,7 @@ export default function AdminRoomsPage() {
                             slug: {r.slug} · {r.plans?.length ?? 0} plan(s)
                           </div>
                         </div>
-                        <Button variant="secondary" onClick={() => startEdit(r)}>
+                        <Button variant="outline" onClick={() => startEdit(r)}>
                           Edit
                         </Button>
                       </div>
@@ -621,11 +617,7 @@ export default function AdminRoomsPage() {
             </>
           )}
 
-          {section === "bookings" && (
-            <Card className="p-6">
-              <div className="text-sm text-muted-foreground">Bookings dashboard placeholder (coming soon).</div>
-            </Card>
-          )}
+          {section === "bookings" && <BookingsSection/>}
           {section === "settings" && (
             <Card className="p-6">
               <div className="text-sm text-muted-foreground">Settings placeholder (brand, taxes, etc.).</div>

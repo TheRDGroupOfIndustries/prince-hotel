@@ -3,14 +3,15 @@ import dbConnect from "@/lib/mongodb"
 import { Room, type IRoom } from "@/models/room"
 
 export async function GET(req: NextRequest) {
-  // Optional search params: ?q=super&group=breakfast
   const { searchParams } = new URL(req.url)
   const q = searchParams.get("q")
   const group = searchParams.get("group")
 
-  await dbConnect();
+  await dbConnect()
 
-  const filter: any = {}
+  // Use a proper filter type instead of any
+  const filter: Record<string, unknown> = {}
+
   if (q) {
     filter.$or = [
       { name: { $regex: q, $options: "i" } },
@@ -19,6 +20,7 @@ export async function GET(req: NextRequest) {
       { bedType: { $regex: q, $options: "i" } },
     ]
   }
+
   if (group === "room-only" || group === "breakfast") {
     filter["plans.group"] = group
   }
@@ -28,7 +30,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  await dbConnect();
+  await dbConnect()
 
   let payload: IRoom
   try {
@@ -48,8 +50,13 @@ export async function POST(req: NextRequest) {
   try {
     const created = await Room.create(payload)
     return NextResponse.json({ data: created }, { status: 201 })
-  } catch (err: any) {
-    const msg = err?.code === 11000 ? "Duplicate slug. Provide a unique slug." : err?.message || "Failed to create room"
+  } catch (err) {
+    // Use unknown type for error and narrow it
+    const error = err as { code?: number; message?: string }
+    const msg =
+      error?.code === 11000
+        ? "Duplicate slug. Provide a unique slug."
+        : error?.message || "Failed to create room"
     return NextResponse.json({ error: msg }, { status: 400 })
   }
 }
