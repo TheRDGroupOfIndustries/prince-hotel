@@ -31,6 +31,8 @@ type RoomForm = {
   view?: string
   bedType?: string
   bathrooms?: number
+  basePrice?: number
+  inventory?: number
   photos: string[]
   amenityBullets: string[]
   plans: Plan[]
@@ -113,36 +115,36 @@ export default function AdminRoomsPage() {
   function update<K extends keyof RoomForm>(key: K, value: RoomForm[K]) {
     setForm((f) => ({ ...f, [key]: value }))
   }
-  function updatePlan(index: number, patch: Partial<Plan>) {
-    setForm((f) => {
-      const plans = [...f.plans]
-      plans[index] = { ...plans[index], ...patch }
-      return { ...f, plans }
-    })
-  }
-  function addPlan() {
-    setForm((f) => ({
-      ...f,
-      plans: [
-        ...f.plans,
-        {
-          title: "Room With Free Cancellation | Breakfast only",
-          group: "breakfast",
-          price: 2200,
-          currency: "INR",
-          refundable: true,
-          freeCancellationText: "Free Cancellation till 24 hrs before check in",
-          isSuperPackage: false,
-          superPackageHeadline: "",
-        },
-      ],
-    }))
-    setPlanInclStr((arr) => [...arr, ""])
-  }
-  function removePlan(i: number) {
-    setForm((f) => ({ ...f, plans: f.plans.filter((_, idx) => idx !== i) }))
-    setPlanInclStr((arr) => arr.filter((_, idx) => idx !== i))
-  }
+  // function updatePlan(index: number, patch: Partial<Plan>) {
+  //   setForm((f) => {
+  //     const plans = [...f.plans]
+  //     plans[index] = { ...plans[index], ...patch }
+  //     return { ...f, plans }
+  //   })
+  // }
+  // function addPlan() {
+  //   setForm((f) => ({
+  //     ...f,
+  //     plans: [
+  //       ...f.plans,
+  //       {
+  //         title: "Room With Free Cancellation | Breakfast only",
+  //         group: "breakfast",
+  //         price: 2200,
+  //         currency: "INR",
+  //         refundable: true,
+  //         freeCancellationText: "Free Cancellation till 24 hrs before check in",
+  //         isSuperPackage: false,
+  //         superPackageHeadline: "",
+  //       },
+  //     ],
+  //   }))
+  //   setPlanInclStr((arr) => [...arr, ""])
+  // }
+  // function removePlan(i: number) {
+  //   setForm((f) => ({ ...f, plans: f.plans.filter((_, idx) => idx !== i) }))
+  //   setPlanInclStr((arr) => arr.filter((_, idx) => idx !== i))
+  // }
 
   async function save() {
     // Merge uploaded photos (form.photos) with manually entered URLs (photosStr)
@@ -160,13 +162,13 @@ export default function AdminRoomsPage() {
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean),
-      plans: form.plans.map((p, i) => ({
-        ...p,
-        inclusions: (planInclStr[i] || "")
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean),
-      })),
+      // plans: form.plans.map((p, i) => ({
+      //   ...p,
+      //   inclusions: (planInclStr[i] || "")
+      //     .split(",")
+      //     .map((s) => s.trim())
+      //     .filter(Boolean),
+      // })),
     }
     const res = await fetch(isEditing ? `/api/rooms/${form._id || form.slug}` : "/api/rooms", {
       method: isEditing ? "PUT" : "POST",
@@ -195,6 +197,8 @@ export default function AdminRoomsPage() {
       sizeSqm: item.sizeSqm,
       view: item.view,
       bedType: item.bedType,
+      basePrice: item.basePrice,
+      inventory: item.inventory,
       bathrooms: item.bathrooms,
       photos: item.photos || [],
       amenityBullets: item.amenityBullets || [],
@@ -363,6 +367,24 @@ export default function AdminRoomsPage() {
                         onChange={(e) => update("sizeSqm", Number(e.target.value))}
                       />
                     </label>
+                     <label className="flex flex-col gap-1">
+                      <span className="text-sm text-muted-foreground">Base Price</span>
+                      <input
+                        type="text"
+                        className="border rounded-md px-3 py-2 bg-background"
+                        value={form.basePrice || 0}
+                        onChange={(e) => update("basePrice", Number(e.target.value))}
+                      />
+                    </label>
+                     <label className="flex flex-col gap-1">
+                      <span className="text-sm text-muted-foreground">Inventory</span>
+                      <input
+                        type="text"
+                        className="border rounded-md px-3 py-2 bg-background"
+                        value={form.inventory || 0}
+                        onChange={(e) => update("inventory", Number(e.target.value))}
+                      />
+                    </label>
                   </div>
                 </div>
 
@@ -427,7 +449,7 @@ export default function AdminRoomsPage() {
                 </div>
 
                 {/* Rate Plans */}
-                <div className="pt-4 border-t">
+                {/* <div className="pt-4 border-t">
                   <div className="flex items-center justify-between">
                     <h3 className="text-base font-medium text-foreground">Rate Plans</h3>
                     <Button onClick={addPlan} variant="accent">
@@ -563,7 +585,7 @@ export default function AdminRoomsPage() {
                       </Card>
                     ))}
                   </div>
-                </div>
+                </div> */}
 
                 <div className="flex items-center gap-3 pt-2">
                   <Button onClick={save}>{isEditing ? "Update Room" : "Create Room"}</Button>

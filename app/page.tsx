@@ -1,7 +1,8 @@
+import Page from "@/components/hotel/MainPage";
 
 
 export default function Home() {
   return (
- <div>hello</div>
+ <Page/>
   );
 }

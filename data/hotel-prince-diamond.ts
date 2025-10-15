@@ -18,13 +18,13 @@ export const HOTEL_PRINCE_DIAMOND: HotelMeta = {
     blurb: "4.4 km drive to Kashi Vishwanath Temple",
   },
   heroPhotos: [
-    "princehotel3.jpg",
-    "princehotel2.jpg",
-    "sd2.jpg",
-    "sd6.jpg",
-    "princehotel7.jpg",
-    "princehotel1.jpg",
-    "princehotel5.jpg",
+    "/princehotel3.jpg",
+    "/princehotel2.jpg",
+    "/sd2.jpg",
+    "/sd6.jpg",
+    "/princehotel7.jpg",
+    "/princehotel1.jpg",
+    "/princehotel5.jpg",
   ],
   coordinates: { lat: 25.3176, lng: 82.9739 },
   amenitiesHighlights: [
@@ -50,6 +50,7 @@ export const HOTEL_PRINCE_DIAMOND: HotelMeta = {
   roomTypes: [
     {
       id: "deluxe",
+      _id: "deluxe", // Add _id (can be same as id for static data)
       name: "Deluxe Room",
       shortDescription: "Cozy room with modern amenities",
       bedInfo: "1 King Bed • 2 Guests",
@@ -60,25 +61,34 @@ export const HOTEL_PRINCE_DIAMOND: HotelMeta = {
         "Air Conditioning ",
         "Telephone",
         "Closet",
-
+        "Minibar",
+      ],
+      amenityBullets: [ // Add amenityBullets (can be same as amenities)
+        "Bathroom",
+        "Mineral Water- additional charge",
+        "Air Conditioning ",
+        "Telephone",
+        "Closet",
         "Minibar",
       ],
       photos: ["/d1.jpg", "/d2.jpg", "/deluxe1.webp", "/deluxe2.webp"],
       occupancy: { adults: 2 },
+      basePrice: 1736, // Add basePrice (use the lowest rate plan price)
+      inventory: 5, // Add inventory (set a reasonable number)
       ratePlans: [
         {
           id: "deluxe-ro",
           name: "Room Only",
-          refundable: false, // Non-Refundable per screenshot
+          refundable: false,
           price: 1736,
           currency: "INR",
           ctaLabel: "BOOK NOW",
-          listPrice: 2790, // crossed MRP to match right rail
+          listPrice: 2790,
         },
         {
           id: "deluxe-bb",
           name: "Room with Breakfast",
-          refundable: false, // Non-Refundable per screenshot
+          refundable: false,
           perks: ["Breakfast included"],
           price: 1731,
           currency: "INR",
@@ -88,11 +98,21 @@ export const HOTEL_PRINCE_DIAMOND: HotelMeta = {
     },
     {
       id: "super-deluxe",
+      _id: "super-deluxe", // Add _id
       name: "Super Deluxe Room",
       shortDescription: "Spacious room with seating area",
       bedInfo: "1 Double Bed • 2 Guests",
       sizeSqft: 180,
       amenities: [
+        "City View",
+        "Bathroom",
+        "Air Conditioning",
+        "Mineral Water",
+        "Work Desk",
+        "Chair",
+        "Minibar(Paid on request)",
+      ],
+      amenityBullets: [ // Add amenityBullets
         "City View",
         "Bathroom",
         "Air Conditioning",
@@ -110,6 +130,8 @@ export const HOTEL_PRINCE_DIAMOND: HotelMeta = {
         "/sd6.jpg",
       ],
       occupancy: { adults: 2 },
+      basePrice: 1893, // Add basePrice
+      inventory: 5, // Add inventory
       ratePlans: [
         {
           id: "sdeluxe-ro",
@@ -118,18 +140,17 @@ export const HOTEL_PRINCE_DIAMOND: HotelMeta = {
           price: 1893,
           currency: "INR",
           ctaLabel: "BOOK NOW",
-          listPrice: 3150, // crossed MRP to match right rail
+          listPrice: 3150,
         },
         {
           id: "sdeluxe-bb",
           name: "Room with Breakfast",
           refundable: false,
           perks: ["Breakfast included"],
-
           price: 1948,
           currency: "INR",
           ctaLabel: "BOOK NOW",
-          listPrice: 3250, // crossed MRP to match right rail
+          listPrice: 3250,
         },
         {
           id: "sdeluxe-bb-super",
@@ -146,7 +167,7 @@ export const HOTEL_PRINCE_DIAMOND: HotelMeta = {
             "Early Check‑In upto 2 hours (subject to availability)",
           ],
           price: 2381,
-          listPrice: 3980, // crossed MRP to match right rail
+          listPrice: 3980,
           currency: "INR",
           ctaLabel: "BOOK NOW",
         },
@@ -154,11 +175,21 @@ export const HOTEL_PRINCE_DIAMOND: HotelMeta = {
     },
     {
       id: "premium",
+      _id: "premium", // Add _id
       name: "Premium Room",
       shortDescription: "Upgraded furnishings with added space",
       bedInfo: "1 King Bed • 2 Guests",
       sizeSqft: 200,
       amenities: [
+        "City View",
+        "1 Bathroom",
+        "Air Conditioning",
+        "Mineral Water",
+        "Closet",
+        "Chair",
+        "Telephone",
+      ],
+      amenityBullets: [ // Add amenityBullets
         "City View",
         "1 Bathroom",
         "Air Conditioning",
@@ -175,6 +206,8 @@ export const HOTEL_PRINCE_DIAMOND: HotelMeta = {
         "/sd6.jpg",
       ],
       occupancy: { adults: 2 },
+      basePrice: 2218, // Add basePrice
+      inventory: 3, // Add inventory
       ratePlans: [
         {
           id: "premium-ro",
@@ -183,7 +216,7 @@ export const HOTEL_PRINCE_DIAMOND: HotelMeta = {
           price: 2218,
           currency: "INR",
           ctaLabel: "BOOK NOW",
-          listPrice: 3690, // crossed MRP to match right rail
+          listPrice: 3690,
         },
         {
           id: "premium-bb",
@@ -193,7 +226,7 @@ export const HOTEL_PRINCE_DIAMOND: HotelMeta = {
           price: 2975,
           currency: "INR",
           ctaLabel: "BOOK NOW",
-          listPrice: 4950, // crossed MRP to match right rail
+          listPrice: 4950,
         },
       ],
     },

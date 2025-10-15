@@ -1,5 +1,7 @@
 "use client";
+
 import { useState } from "react";
+import Image from "next/image";
 
 interface GalleryProps {
   images: string[];
@@ -13,14 +15,16 @@ export function Gallery({ images }: GalleryProps) {
       <div className="grid grid-cols-4 gap-2 md:gap-3">
         {/* Main image */}
         <div className="col-span-4 row-span-2 md:col-span-2">
-          <img
-            src={images[active] ?? images[0]}
+          <Image
+            src={images[active] || images[0] || "/placeholder.svg"}
             alt="Hotel photo"
+            width={800}
+            height={600}
             className="aspect-[4/3] w-full rounded-lg object-cover"
           />
         </div>
 
-        {/* Desktop thumbnails (unchanged) */}
+        {/* Desktop thumbnails */}
         {images.slice(0, 5).map((src, idx) => {
           const isActive = idx === active;
           const base =
@@ -33,9 +37,11 @@ export function Gallery({ images }: GalleryProps) {
               className={`${base} ${ring}`}
               aria-label={`Show image ${idx + 1}`}
             >
-              <img
+              <Image
                 src={src || "/placeholder.svg"}
                 alt={`Thumbnail ${idx + 1}`}
+                width={160}
+                height={120}
                 className="aspect-video object-cover"
               />
             </button>
@@ -43,7 +49,7 @@ export function Gallery({ images }: GalleryProps) {
         })}
       </div>
 
-      {/* 👇 Mobile thumbnails (horizontal scroll) */}
+      {/* Mobile thumbnails (horizontal scroll) */}
       <div className="mt-2 flex gap-2 overflow-x-auto md:hidden scrollbar-hide">
         {images.map((src, idx) => {
           const isActive = idx === active;
@@ -55,9 +61,11 @@ export function Gallery({ images }: GalleryProps) {
                 isActive ? "ring-2 ring-[var(--primary)] scale-95" : ""
               }`}
             >
-              <img
+              <Image
                 src={src || "/placeholder.svg"}
                 alt={`Thumbnail ${idx + 1}`}
+                width={96}
+                height={64}
                 className="w-24 h-16 object-cover rounded-md"
               />
             </button>

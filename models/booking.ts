@@ -40,7 +40,9 @@ const GuestSchema = new Schema({
 const BookingSchema = new Schema({
   bookingId: { type: String, required: true, unique: true },
   hotelName: { type: String, required: true },
+    roomId: { type: mongoose.Schema.Types.ObjectId, ref: 'Room', required: true }, // ✨ Add this
   roomName: { type: String, required: true },
+  numberOfRooms: { type: Number, required: true },
   plan: { type: String, required: true },
   checkIn: { type: Date, required: true },
   checkOut: { type: Date, required: true },

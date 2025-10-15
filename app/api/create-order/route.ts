@@ -1,14 +1,15 @@
+// /api/create-order/route.ts
+
 import { NextRequest, NextResponse } from 'next/server';
-import { razorpay } from '@/lib/razorpay'; // Assuming razorpay instance is exported
+import { razorpay } from '@/lib/razorpay';
 import connectDB from '@/lib/mongodb';
-import Booking from '@/models/booking'; // Your existing final Booking model
-import Quote from '@/models/quote'; // The temporary Quote model we created
+import Booking from '@/models/booking';
+import Quote from '@/models/quote';
 
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
     
-    // ✨ 1. The API now expects a `quoteId` instead of all the price details.
     const body = await request.json();
     const {
       quoteId,
@@ -18,7 +19,6 @@ export async function POST(request: NextRequest) {
       nights,
     } = body;
 
-    // ✨ 2. Fetch the secure, temporary quote from the database.
     const quote = await Quote.findById(quoteId);
 
     if (!quote) {
@@ -28,19 +28,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ✨ 3. Recalculate the final total securely on the server based on the quote's data.
-    const breakdown = quote.priceBreakdown as any; // Cast as any to access properties
+    const breakdown = quote.priceBreakdown as any;
     const perNightPrice = breakdown.totalPrice || 0;
     
     const subTotal = perNightPrice * nights;
     const taxes = subTotal * 0.05; // 5% GST
     const finalTotal = subTotal + taxes;
 
-    // 4. Create a permanent booking record with a "pending" status.
+    let planName = 'Room Only';
+    if (quote.selections.mealPlan === 'CP') {
+      planName = 'CP (With Breakfast)';
+    } else if (quote.selections.mealPlan === 'AP') {
+      planName = 'AP (Breakfast + Dinner)';
+    }
+
     const booking = new Booking({
-      hotelName: "Hotel Prince Diamond Varanasi", // Or fetch from a config
+      hotelName: "Hotel Prince Diamond Varanasi",
+      // ✨ Save the roomId and numberOfRooms to the final booking record
+      roomId: quote.roomId,
       roomName: quote.roomName,
-      plan: quote.selections.mealPlan === 'CP' ? 'With Breakfast' : 'Room Only',
+      numberOfRooms: quote.numberOfRooms,
+      plan: planName,
       checkIn: new Date(checkIn),
       checkOut: new Date(checkOut),
       nights,
@@ -50,15 +58,13 @@ export async function POST(request: NextRequest) {
       totalAmount: finalTotal,
       currency: 'INR',
       paymentStatus: 'pending',
-      bookingStatus: 'pending', // Will be confirmed after successful payment
+      bookingStatus: 'pending',
     });
     
-    // The receipt for Razorpay should be unique, so we use the new booking's ID.
     const receiptId = booking._id.toString();
 
-    // 5. Create the Razorpay order using the SERVER-CALCULATED final total.
     const order = await razorpay.orders.create({
-      amount: Math.round(finalTotal * 100), // Amount in paise
+      amount: Math.round(finalTotal * 100),
       currency: 'INR',
       receipt: receiptId,
       notes: {
@@ -67,15 +73,12 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // 6. Save the Razorpay Order ID to our booking record.
     booking.razorpayOrderId = order.id;
-    booking.bookingId = receiptId; // Set your internal bookingId
+    booking.bookingId = receiptId;
     await booking.save();
 
-    // ✨ 7. Clean up by deleting the now-used temporary quote.
     await Quote.findByIdAndDelete(quoteId);
 
-    // 8. Return the order details to the frontend to open the Razorpay modal.
     return NextResponse.json({
       success: true,
       order: {

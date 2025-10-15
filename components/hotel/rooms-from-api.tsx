@@ -2,58 +2,67 @@
 
 import useSWR from "swr"
 import { RoomBookingCard } from "@/components/hotel/room-booking-card"
+import { Card } from "@/components/base/card";
 
-// Update ApiRoom to include all the new fields
-type ApiPlan = {
-  group: "room-only" | "breakfast"
-  price: number
+// Room type from API
+export type ApiRoom = {
+  _id: string;
+  name: string;
+  photos: string[];
+  amenityBullets: string[];
+  basePrice: number;
+  inventory: number;
+  view?: string;
+  bedType?: string;
+  sizeSqft?: number;
+  bathrooms?: number;
 }
 
-type ApiRoom = {
-  _id: string
-  name: string
-  amenityBullets: string[]
-  photos: string[]
-  plans: ApiPlan[]
-  view?: string
-  bedType?: string
-  sizeSqft?: number
-  bathrooms?: number
-}
-
-const fetcher = (url: string) =>
+// Fetcher
+const fetcher = (url: string): Promise<ApiRoom[]> =>
   fetch(url)
     .then((r) => r.json())
-    .then((j) => j.data)
+    .then((j) => j.data);
 
-export default function RoomsFromApi() {
-  const { data, error, isLoading } = useSWR<ApiRoom[]>("/api/rooms", fetcher)
+export default function RoomsFromApi({ initialRooms }: { initialRooms?: ApiRoom[] }) {
+  const { data: rooms, error, isLoading } = useSWR<ApiRoom[]>("/api/rooms", fetcher, {
+    fallbackData: initialRooms,
+  });
 
-  if (isLoading) return <div className="text-sm text-muted-foreground p-4">Loading rooms…</div>
-  if (error) return <div className="text-sm text-red-600 p-4">Failed to load rooms.</div>
-  if (!data?.length) return <div className="text-sm text-muted-foreground p-4">No rooms added yet.</div>
+  if (isLoading) {
+    return (
+      <Card className="p-4">
+        <div className="text-sm text-muted-foreground">Loading available rooms…</div>
+      </Card>
+    );
+  }
+  
+  if (error) {
+    return (
+      <Card className="p-4">
+        <div className="text-sm text-red-600">Failed to load rooms. Please refresh the page.</div>
+      </Card>
+    );
+  }
+  
+  if (!rooms || rooms.length === 0) {
+    return (
+      <Card className="p-4">
+        <div className="text-sm text-muted-foreground">No rooms are available at the moment.</div>
+      </Card>
+    );
+  }
+
+  // Optional: explicitly sort by _id to ensure first document shows first
+  const sortedRooms = rooms.slice().sort((a, b) => a._id.localeCompare(b._id));
 
   return (
     <div className="space-y-6">
-      {data.map((room) => {
-        const roomOnlyPlan = room.plans.find(p => p.group === 'room-only');
-        if (!roomOnlyPlan) return null;
-
-        // Pass all the necessary data, including the new details
-        const roomData = {
-          _id: room._id,
-          name: room.name,
-          photos: room.photos,
-          amenityBullets: room.amenityBullets,
-          basePrice: roomOnlyPlan.price,
-          view: room.view,
-          bedType: room.bedType,
-          sizeSqft: room.sizeSqft,
-          bathrooms: room.bathrooms,
-        }
-        
-        return <RoomBookingCard key={room._id} room={roomData} />
-      })}
+      {sortedRooms.map((room) => (
+        <div key={room._id} id={`room-${room._id}`}>
+          <RoomBookingCard room={room} />
+        </div>
+      ))}
     </div>
-  )
+  );
 }

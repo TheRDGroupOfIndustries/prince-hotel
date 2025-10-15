@@ -29,11 +29,18 @@ type Booking = {
   createdAt: string
 }
 
+// Updated Pagination Type to match the API response
+type Pagination = {
+  currentPage: number
+  totalPages: number
+  totalCount: number
+  hasNextPage: boolean
+  hasPrevPage: boolean
+}
+
 type BookingsApiResponse = {
   bookings: Booking[]
-  pagination: {
-    totalCount: number
-  }
+  pagination: Pagination
 }
 
 // --- Helper Functions ---
@@ -162,10 +169,52 @@ function BookingCard({ booking }: { booking: Booking }) {
   )
 }
 
+// --- New Pagination Component ---
+function PaginationControls({
+  pagination,
+  onPageChange,
+}: {
+  pagination: Pagination
+  onPageChange: (page: number) => void
+}) {
+  const { currentPage, totalPages, hasPrevPage, hasNextPage } = pagination
+
+  return (
+    <div className="flex items-center justify-between mt-6">
+      <button
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={!hasPrevPage}
+        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        Previous
+      </button>
+      <span className="text-sm text-gray-600">
+        Page {currentPage} of {totalPages}
+      </span>
+      <button
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={!hasNextPage}
+        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        Next
+      </button>
+    </div>
+  )
+}
+
 export function BookingsSection() {
-  const { data, error, isLoading } = useSWR<BookingsApiResponse>("/api/bookings", fetcher, {
-    revalidateOnFocus: false,
-  })
+  // 1. Add state for the current page
+  const [page, setPage] = useState(1)
+  const bookingsPerPage = 6
+
+  // 2. Make the SWR key dynamic to include page and limit
+  const { data, error, isLoading } = useSWR<BookingsApiResponse>(
+    `/api/bookings?page=${page}&limit=${bookingsPerPage}`,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+    }
+  )
 
   if (isLoading) {
     return (
@@ -209,6 +258,11 @@ export function BookingsSection() {
           <BookingCard key={booking._id} booking={booking} />
         ))}
       </div>
+
+      {/* 3. Add Pagination Controls */}
+      {data.pagination.totalPages > 1 && (
+        <PaginationControls pagination={data.pagination} onPageChange={setPage} />
+      )}
     </div>
   )
 }
