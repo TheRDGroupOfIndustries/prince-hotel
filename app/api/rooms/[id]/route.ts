@@ -3,16 +3,16 @@ import dbConnect from "@/lib/mongodb"
 import { Room, type IRoom } from "@/models/room"
 import { Types } from "mongoose"
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   await dbConnect();
-  const id = params.id
+  const { id } = await params; // Await the params
   const isObjectId = Types.ObjectId.isValid(id)
   const room = isObjectId ? await Room.findById(id).lean() : await Room.findOne({ slug: id }).lean()
   if (!room) return NextResponse.json({ error: "Room not found" }, { status: 404 })
   return NextResponse.json({ data: room })
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   await dbConnect();
   let payload: Partial<IRoom>
   try {
@@ -21,7 +21,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
   }
 
-  const id = params.id
+  const { id } = await params; // Await the params
   const query = Types.ObjectId.isValid(id) ? { _id: id } : { slug: id }
 
   try {
@@ -37,9 +37,9 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   await dbConnect();
-  const id = params.id
+  const { id } = await params; // Await the params
   const query = Types.ObjectId.isValid(id) ? { _id: id } : { slug: id }
 
   const removed = await Room.findOneAndDelete(query).lean()

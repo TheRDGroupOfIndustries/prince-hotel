@@ -15,17 +15,24 @@ export interface RatePlan {
 
 export interface RoomType {
   id: string
+  _id: string
   name: string
   shortDescription?: string
   bedInfo?: string
   sizeSqft?: number
+  amenityBullets: string[];
   amenities: string[]
+  basePrice: number // starting price for this room type (used in listing)
+  inventory: number // number of rooms available
   photos: string[] // image urls (can be placeholder)
   ratePlans: RatePlan[]
   occupancy: {
     adults: number
     children?: number
   }
+   view?: string;
+  bedType?: string;
+  bathrooms?: number;
 }
 
 export interface ReviewBreakdown {

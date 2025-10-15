@@ -32,9 +32,11 @@ export interface IRoom {
   view?: string // e.g., "City View"
   bedType?: string // e.g., "1 Double Bed"
   bathrooms?: number
+  basePrice: number
+  inventory: number
   amenityBullets?: string[] // bullet list: AC, Mineral Water, etc.
   // Plans shown in the right column
-  plans: IRatePlan[]
+  plans?: IRatePlan[]
   createdAt?: Date
   updatedAt?: Date
 }
@@ -68,10 +70,12 @@ const RoomSchema = new Schema<IRoom>(
     sizeSqft: { type: Number },
     sizeSqm: { type: Number },
     view: { type: String },
+    basePrice: { type: Number },
+    inventory: { type: Number },
     bedType: { type: String },
     bathrooms: { type: Number },
     amenityBullets: [{ type: String }],
-    plans: { type: [RatePlanSchema], default: [] },
+    plans: { type: [RatePlanSchema], default: [],required: false },
   },
   { timestamps: true },
 )

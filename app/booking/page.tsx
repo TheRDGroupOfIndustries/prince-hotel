@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/base/card"
@@ -21,13 +21,14 @@ declare global {
 
 interface QuoteData {
   roomName: string;
+  numberOfRooms: number;
   selections: {
     adults: number;
     children: { age: number }[];
     mealPlan: 'EP' | 'CP';
   };
   priceBreakdown: any;
-  createdAt: string; // The timestamp from the server is crucial for the timer
+  createdAt: string;
 }
 
 interface Guest {
@@ -37,6 +38,17 @@ interface Guest {
   lastName: string;
 }
 
+interface PaymentSuccessData {
+  bookingId: string;
+  checkIn: string;
+  checkOut: string;
+  totalAmount: string;
+  roomName: string;
+  guests: Guest[];
+  email: string;
+  phone: string;
+}
+
 const formatTime = (seconds: number) => {
   if (seconds < 0) seconds = 0;
   const minutes = Math.floor(seconds / 60);
@@ -44,7 +56,8 @@ const formatTime = (seconds: number) => {
   return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
 };
 
-export default function BookingPage() {
+// Inner component that uses useSearchParams
+function BookingPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
@@ -98,7 +111,6 @@ export default function BookingPage() {
     return () => clearInterval(timer);
   }, [timeLeft]);
 
-
   useEffect(() => {
     if (checkInDate && checkOutDate) {
       const nights = differenceInDays(checkOutDate, checkInDate);
@@ -146,6 +158,10 @@ export default function BookingPage() {
     });
   };
 
+  const generateBookingId = () => {
+    return 'BK' + Math.random().toString(36).substr(2, 8).toUpperCase();
+  };
+
   const handlePayNow = async () => {
     const quoteId = searchParams.get('quoteId');
     if (!quoteData || !finalPriceSummary || !quoteId) return;
@@ -164,7 +180,6 @@ export default function BookingPage() {
           checkOut: checkOutDate.toISOString(),
           nights: totalNights,
           guests: guests.map(g => ({ ...g, email: primaryGuest.email, phone: primaryGuest.phone })),
-          totalAmount: finalPriceSummary.finalTotal,
         }),
       });
 
@@ -172,6 +187,20 @@ export default function BookingPage() {
       if (!orderData.success) {
         throw new Error(orderData.error || 'Failed to create order');
       }
+
+      const bookingId = generateBookingId();
+      const fmt = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" });
+
+      const successData: PaymentSuccessData = {
+        bookingId,
+        checkIn: format(checkInDate, 'EEE d MMM yyyy'),
+        checkOut: format(checkOutDate, 'EEE d MMM yyyy'),
+        totalAmount: fmt.format(finalPriceSummary.finalTotal),
+        roomName: quoteData.roomName,
+        guests: guests,
+        email: primaryGuest.email,
+        phone: primaryGuest.phone
+      };
 
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
@@ -188,13 +217,27 @@ export default function BookingPage() {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
+              bookingData: JSON.stringify(successData) // Pass booking data to backend
             }),
           });
           const verificationData = await verificationResponse.json();
           if (verificationData.success) {
-            window.location.href = '/booking-success';
+            // Pass all details to booking success page via query params
+            const params = new URLSearchParams({
+              bookingId: successData.bookingId,
+              checkIn: successData.checkIn,
+              checkOut: successData.checkOut,
+              totalAmount: successData.totalAmount.replace('₹', '').replace(',', ''),
+              roomName: encodeURIComponent(successData.roomName),
+              email: encodeURIComponent(successData.email),
+              phone: encodeURIComponent(successData.phone),
+              guests: guests.length.toString(),
+              nights: totalNights.toString()
+            });
+            window.location.href = `/booking-success?${params.toString()}`;
           } else {
             alert('Payment verification failed. Please contact support.');
+            setIsProcessing(false);
           }
         },
         prefill: {
@@ -381,5 +424,21 @@ export default function BookingPage() {
         </div>
       </div>
     </div>
-  )
+  );
+}
+
+// Main component with Suspense boundary
+export default function BookingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 mx-auto animate-spin text-primary" />
+          <div className="text-lg font-semibold text-gray-600 mt-4">Loading booking page...</div>
+        </div>
+      </div>
+    }>
+      <BookingPageContent />
+    </Suspense>
+  );
 }

@@ -4,10 +4,11 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 export interface IQuote extends Document {
   roomId: mongoose.Schema.Types.ObjectId;
   roomName: string;
+    numberOfRooms: number;
   selections: {
     adults: number;
     children: { age: number }[];
-    mealPlan: 'EP' | 'CP';
+    mealPlan: 'EP' | 'CP'|'AP';
   };
   priceBreakdown: object; // Storing the full breakdown object
   createdAt: Date;
@@ -16,6 +17,7 @@ export interface IQuote extends Document {
 const QuoteSchema: Schema = new Schema({
   roomId: { type: mongoose.Schema.Types.ObjectId, ref: 'Room', required: true },
   roomName: { type: String, required: true },
+   numberOfRooms: { type: Number, required: true },
   selections: {
     adults: { type: Number, required: true },
     children: [{ age: Number }],
