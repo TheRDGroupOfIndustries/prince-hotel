@@ -13,10 +13,52 @@ import { format, differenceInDays, addDays } from 'date-fns'
 import { CalendarIcon, Mail, Phone, Loader2, Clock } from 'lucide-react'
 
 // --- Type Definitions ---
+interface RazorpayOptions {
+  key: string | undefined;
+  amount: number;
+  currency: string;
+  name: string;
+  description: string;
+  order_id: string;
+  handler: (response: RazorpayResponse) => Promise<void>;
+  prefill: {
+    name: string;
+    email: string;
+    contact: string;
+  };
+  modal: {
+    ondismiss: () => void;
+  };
+}
+
+interface RazorpayResponse {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}
+
+interface RazorpayWindow {
+  Razorpay: new (options: RazorpayOptions) => {
+    open: () => void;
+  };
+}
+
 declare global {
-  interface Window {
-    Razorpay: any;
+  interface Window extends RazorpayWindow {
+    // Example: add a custom flag
+    isRazorpayLoaded?: boolean;
   }
+}
+
+
+interface PriceBreakdown {
+  basePrice?: number;
+  extraAdultsCost?: number;
+  extraChildrenStayCost?: number;
+  breakfastCost?: number;
+  dinnerCost?: number;
+  numChargeableForMeals?: number;
+  totalPrice?: number;
 }
 
 interface QuoteData {
@@ -27,7 +69,7 @@ interface QuoteData {
     children: { age: number }[];
     mealPlan: 'EP' | 'CP';
   };
-  priceBreakdown: any;
+  priceBreakdown: PriceBreakdown;
   createdAt: string;
 }
 
@@ -202,14 +244,14 @@ function BookingPageContent() {
         phone: primaryGuest.phone
       };
 
-      const options = {
+      const options: RazorpayOptions = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: orderData.order.amount,
         currency: orderData.order.currency,
         name: 'Hotel Prince Diamond Varanasi',
         description: `Booking for ${quoteData.roomName}`,
         order_id: orderData.order.id,
-        handler: async function (response: any) {
+        handler: async function (response: RazorpayResponse) {
           const verificationResponse = await fetch('/api/verify-payment', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

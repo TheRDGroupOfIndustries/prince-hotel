@@ -6,6 +6,31 @@ import connectDB from '@/lib/mongodb';
 import Booking from '@/models/booking';
 import Quote from '@/models/quote';
 
+interface PriceBreakdown {
+  totalPrice: number;
+  basePrice?: number;
+  extraAdultsCost?: number;
+  extraChildrenStayCost?: number;
+  breakfastCost?: number;
+  dinnerCost?: number;
+  numChargeableForMeals?: number;
+}
+
+interface QuoteSelections {
+  adults: number;
+  children: Array<{ age: number }>;
+  mealPlan: 'EP' | 'CP' | 'AP';
+}
+
+interface QuoteDocument {
+  _id: string;
+  roomId: string;
+  roomName: string;
+  numberOfRooms: number;
+  priceBreakdown: PriceBreakdown;
+  selections: QuoteSelections;
+}
+
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
@@ -19,7 +44,7 @@ export async function POST(request: NextRequest) {
       nights,
     } = body;
 
-    const quote = await Quote.findById(quoteId);
+    const quote = await Quote.findById(quoteId) as QuoteDocument | null;
 
     if (!quote) {
       return NextResponse.json(
@@ -28,7 +53,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const breakdown = quote.priceBreakdown as any;
+    const breakdown = quote.priceBreakdown;
     const perNightPrice = breakdown.totalPrice || 0;
     
     const subTotal = perNightPrice * nights;
