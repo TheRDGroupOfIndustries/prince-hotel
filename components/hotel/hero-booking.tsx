@@ -5,7 +5,7 @@ import { Gallery } from "./gallery";
 import { Card } from "@/components/base/card";
 import { Button } from "@/components/base/button";
 import type { RoomType } from "@/types/hotel";
-import { Star,StarHalf, Check, Dot, Award, ShieldCheck, MapPin } from "lucide-react";
+import { Star, StarHalf, Check, Dot, Award, ShieldCheck, MapPin } from "lucide-react";
 import { Playfair_Display } from "next/font/google";
 
 const playfair = Playfair_Display({
@@ -79,6 +79,42 @@ function FeaturedRoomCard({
   );
 }
 
+// Skeleton component for loading state
+function FeaturedRoomCardSkeleton() {
+  return (
+    <Card className="p-4 border shadow-sm animate-pulse">
+      <div className="flex justify-between items-start gap-4">
+        <div className="flex-1">
+          <div className="h-6 bg-gray-300 rounded w-3/4 mb-2"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        </div>
+        <div className="text-right flex-shrink-0">
+          <div className="h-6 bg-gray-300 rounded w-20 mb-2"></div>
+          <div className="h-9 bg-gray-300 rounded w-24"></div>
+        </div>
+      </div>
+      <div className="mt-3 border-t pt-3 space-y-2">
+        <div className="flex items-center gap-2">
+          <Dot className="h-5 w-5 text-gray-300" />
+          <div className="h-4 bg-gray-200 rounded w-full"></div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Dot className="h-5 w-5 text-gray-300" />
+          <div className="h-4 bg-gray-200 rounded w-full"></div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Dot className="h-5 w-5 text-gray-300" />
+          <div className="h-4 bg-gray-200 rounded w-full"></div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Dot className="h-5 w-5 text-gray-300" />
+          <div className="h-4 bg-gray-200 rounded w-full"></div>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 interface Props {
   images: string[];
   hotel: {
@@ -93,17 +129,64 @@ interface Props {
     amenitiesHighlights: string[];
     nearestLandmark?: { name: string; blurb: string };
   };
-  featuredRoom: RoomType | null;
 }
 
-export function HeroBooking({ images, hotel, featuredRoom }: Props) {
+export function HeroBooking({ images, hotel }: Props) {
   const fmt = new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: hotel.currency,
     minimumFractionDigits: 0,
   });
 
+  const [featuredRoom, setFeaturedRoom] = useState<RoomType | null>(null);
   const [showFeatured, setShowFeatured] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch rooms and select featured room
+  useEffect(() => {
+    async function fetchRooms() {
+      try {
+        setIsLoading(true);
+        const res = await fetch('/api/rooms', { 
+          cache: 'no-store'
+        });
+        
+        if (!res.ok) {
+          console.error("Failed to fetch rooms:", res.statusText);
+          return;
+        }
+        
+        const data = await res.json();
+        const allRooms: RoomType[] = data.data || [];
+        
+        // Room selection logic
+        const deluxeRoom = allRooms.find(r => r.name === 'Deluxe Room');
+        const superDeluxeRoom = allRooms.find(r => r.name === 'Super Deluxe Room');
+        
+        let selectedFeaturedRoom: RoomType | null = null;
+        if (deluxeRoom && deluxeRoom.inventory > 0) {
+          selectedFeaturedRoom = deluxeRoom;
+        } else if (superDeluxeRoom && superDeluxeRoom.inventory > 0) {
+          selectedFeaturedRoom = superDeluxeRoom;
+        } else {
+          selectedFeaturedRoom = allRooms.find(r => r.inventory > 0) || null;
+        }
+        
+        setFeaturedRoom(selectedFeaturedRoom);
+        
+        // Only show featured room card after data is loaded
+        if (selectedFeaturedRoom) {
+          setShowFeatured(true);
+        }
+      } catch (error) {
+        console.error("Error fetching rooms:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchRooms();
+  }, []);
 
   const scrollToFeaturedRoom = () => {
     if (!featuredRoom) return;
@@ -112,11 +195,6 @@ export function HeroBooking({ images, hotel, featuredRoom }: Props) {
       el.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   };
-
-  // ✅ Only show FeaturedRoomCard after hydration
-  useEffect(() => {
-    if (featuredRoom) setShowFeatured(true);
-  }, [featuredRoom]);
 
   return (
     <div className="bg-slate-50 p-4 rounded-lg">
@@ -152,15 +230,18 @@ export function HeroBooking({ images, hotel, featuredRoom }: Props) {
             </p>
           </div>
 
-          {showFeatured && (
-            <div className="block lg:hidden mt-4">
+          {/* Mobile: Show skeleton while loading, actual card when loaded */}
+          <div className="block lg:hidden mt-4">
+            {isLoading ? (
+              <FeaturedRoomCardSkeleton />
+            ) : showFeatured && featuredRoom ? (
               <FeaturedRoomCard
-                room={featuredRoom!}
+                room={featuredRoom}
                 onBookNow={scrollToFeaturedRoom}
                 priceFormatter={fmt}
               />
-            </div>
-          )}
+            ) : null}
+          </div>
 
           <div className="pt-4">
             <h2 className="text-xl font-bold text-gray-800 mb-3">Amenities</h2>
@@ -176,13 +257,17 @@ export function HeroBooking({ images, hotel, featuredRoom }: Props) {
         </div>
 
         <aside className="hidden lg:block lg:col-span-1 space-y-4">
-          {showFeatured && (
+          {/* Desktop: Show skeleton while loading, actual card when loaded */}
+          {isLoading ? (
+            <FeaturedRoomCardSkeleton />
+          ) : showFeatured && featuredRoom ? (
             <FeaturedRoomCard
-              room={featuredRoom!}
+              room={featuredRoom}
               onBookNow={scrollToFeaturedRoom}
               priceFormatter={fmt}
             />
-          )}
+          ) : null}
+          
           <Card className="p-3 border shadow-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
