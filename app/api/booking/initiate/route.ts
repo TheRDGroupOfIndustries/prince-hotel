@@ -5,7 +5,7 @@ import {Room} from '@/models/room'; // Ensure you have a Room model
 
 // Pricing constants (should ideally be in a shared config file)
 const PRICE_EXTRA_ADULT = 300;
-const PRICE_BREAKFAST_CP = 300;
+const PRICE_BREAKFAST_CP = 150;
 const PRICE_BREAKFAST_AP = 150;
 const PRICE_DINNER_AP = 400;
 

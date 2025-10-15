@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Gallery } from "./gallery";
 import { Card } from "@/components/base/card";
 import { Button } from "@/components/base/button";
@@ -50,7 +51,7 @@ function FeaturedRoomCard({
             {priceFormatter.format(room.basePrice)}
             <span className="text-xs font-normal text-gray-500">/night</span>
           </p>
-          <Button className="mt-1 w-full"  onClick={onBookNow}>
+          <Button className="mt-1 w-full" onClick={onBookNow}>
             Book Now
           </Button>
         </div>
@@ -70,7 +71,7 @@ function FeaturedRoomCard({
         </li>
         <li className="flex items-center gap-2">
           <Dot className="h-5 w-5 text-gray-400 flex-shrink-0" />
-          <span>Breakfast (optional): ₹300 per adult</span>
+          <span>Breakfast (optional): ₹150 per adult</span>
         </li>
       </ul>
     </Card>
@@ -101,6 +102,8 @@ export function HeroBooking({ images, hotel, featuredRoom }: Props) {
     minimumFractionDigits: 0,
   });
 
+  const [showFeatured, setShowFeatured] = useState(false);
+
   const scrollToFeaturedRoom = () => {
     if (!featuredRoom) return;
     const el = document.getElementById(`room-${featuredRoom._id}`);
@@ -109,11 +112,18 @@ export function HeroBooking({ images, hotel, featuredRoom }: Props) {
     }
   };
 
+  // ✅ Only show FeaturedRoomCard after hydration
+  useEffect(() => {
+    if (featuredRoom) setShowFeatured(true);
+  }, [featuredRoom]);
+
   return (
     <div className="bg-slate-50 p-4 rounded-lg">
       <div className="mb-4">
         <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-3 flex-nowrap">
-          <h1 className={`text-md sm:text-3xl font-bold text-gray-800 whitespace-nowrap ${playfair.className}`}>
+          <h1
+            className={`text-md sm:text-3xl font-bold text-gray-800 whitespace-nowrap ${playfair.className}`}
+          >
             {hotel.name}
           </h1>
           <div className="flex-shrink-0 flex items-center space-x-1 scale-90 sm:scale-100">
@@ -121,12 +131,17 @@ export function HeroBooking({ images, hotel, featuredRoom }: Props) {
           </div>
         </div>
       </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-3">
           <Gallery images={images} />
           <ul className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-600">
-            <li className="flex items-center gap-1.5"><Award className="h-4 w-4 text-blue-600" /> Great Choice!</li>
-            <li className="flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-green-600" /> Best Price Guarantee</li>
+            <li className="flex items-center gap-1.5">
+              <Award className="h-4 w-4 text-blue-600" /> Great Choice!
+            </li>
+            <li className="flex items-center gap-1.5">
+              <ShieldCheck className="h-4 w-4 text-green-600" /> Best Price Guarantee
+            </li>
           </ul>
           <hr className="my-2" />
           <div>
@@ -135,10 +150,14 @@ export function HeroBooking({ images, hotel, featuredRoom }: Props) {
               {hotel.aboutText ?? "Experience a wonderful stay at our hotel..."}
             </p>
           </div>
-          
-          {featuredRoom && (
+
+          {showFeatured && (
             <div className="block lg:hidden mt-4">
-              <FeaturedRoomCard room={featuredRoom} onBookNow={scrollToFeaturedRoom} priceFormatter={fmt} />
+              <FeaturedRoomCard
+                room={featuredRoom!}
+                onBookNow={scrollToFeaturedRoom}
+                priceFormatter={fmt}
+              />
             </div>
           )}
 
@@ -154,9 +173,14 @@ export function HeroBooking({ images, hotel, featuredRoom }: Props) {
             </ul>
           </div>
         </div>
+
         <aside className="hidden lg:block lg:col-span-1 space-y-4">
-          {featuredRoom && (
-            <FeaturedRoomCard room={featuredRoom} onBookNow={scrollToFeaturedRoom} priceFormatter={fmt} />
+          {showFeatured && (
+            <FeaturedRoomCard
+              room={featuredRoom!}
+              onBookNow={scrollToFeaturedRoom}
+              priceFormatter={fmt}
+            />
           )}
           <Card className="p-3 border shadow-sm">
             <div className="flex items-center justify-between">
@@ -169,7 +193,10 @@ export function HeroBooking({ images, hotel, featuredRoom }: Props) {
                   <p className="text-xs text-gray-500">({hotel.reviewCount} RATINGS)</p>
                 </div>
               </div>
-              <a href="#reviews" className="text-sm font-semibold text-blue-600 hover:underline whitespace-nowrap">
+              <a
+                href="#reviews"
+                className="text-sm font-semibold text-blue-600 hover:underline whitespace-nowrap"
+              >
                 All Reviews
               </a>
             </div>
@@ -183,7 +210,10 @@ export function HeroBooking({ images, hotel, featuredRoom }: Props) {
                     <p className="text-xs text-gray-500">{hotel.nearestLandmark.blurb}</p>
                   </div>
                 </div>
-                <a href="#map" className="text-sm font-semibold text-blue-600 hover:underline whitespace-nowrap">
+                <a
+                  href="#map"
+                  className="text-sm font-semibold text-blue-600 hover:underline whitespace-nowrap"
+                >
                   See on Map
                 </a>
               </div>

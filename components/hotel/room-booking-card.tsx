@@ -12,7 +12,7 @@ import {
 
 // --- Define Pricing Constants ---
 const PRICE_EXTRA_ADULT = 300
-const PRICE_BREAKFAST_CP = 300 // For Continental Plan
+const PRICE_BREAKFAST_CP = 150 // For Continental Plan
 const PRICE_BREAKFAST_AP = 150 // For American Plan
 const PRICE_DINNER_AP = 400 // For American Plan
 const MAX_GUESTS_PER_ROOM = 4 // Max adults per room
