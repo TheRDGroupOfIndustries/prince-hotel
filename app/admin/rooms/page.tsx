@@ -5,22 +5,23 @@ import useSWR from "swr"
 import { Card } from "@/components/base/card"
 import { Button } from "@/components/base/button"
 import { BookingsSection } from "@/components/admin/booking"
+import Image from "next/image"
 
-type Plan = {
-  title: string
-  group: "room-only" | "breakfast"
-  price: number
-  originalPrice?: number
-  listPrice?: number
-  currency?: string
-  refundable?: boolean
-  inclusions?: string[]
-  freeCancellationText?: string
-  offerText?: string
-  taxesAndFees?: string
-  isSuperPackage?: boolean
-  superPackageHeadline?: string
-}
+// type Plan = {
+//   title: string
+//   group: "room-only" | "breakfast"
+//   price: number
+//   originalPrice?: number
+//   listPrice?: number
+//   currency?: string
+//   refundable?: boolean
+//   inclusions?: string[]
+//   freeCancellationText?: string
+//   offerText?: string
+//   taxesAndFees?: string
+//   isSuperPackage?: boolean
+//   superPackageHeadline?: string
+// }
 
 type RoomForm = {
   _id?: string
@@ -35,7 +36,7 @@ type RoomForm = {
   inventory?: number
   photos: string[]
   amenityBullets: string[]
-  plans: Plan[]
+  // plans: Plan[]
 }
 
 const fetcher = (url: string) =>
@@ -108,7 +109,7 @@ export default function AdminRoomsPage() {
   // raw comma-separated inputs
   const [photosStr, setPhotosStr] = useState<string>("")
   const [amenitiesStr, setAmenitiesStr] = useState<string>("")
-  const [planInclStr, setPlanInclStr] = useState<string[]>([])
+  
 
   const [uploading, setUploading] = useState(false)
 
@@ -180,7 +181,7 @@ export default function AdminRoomsPage() {
       setForm(emptyForm)
       setPhotosStr("")
       setAmenitiesStr("")
-      setPlanInclStr([])
+      // setPlanInclStr([])
       await mutate()
       alert("Saved!")
     } else {
@@ -188,7 +189,7 @@ export default function AdminRoomsPage() {
     }
   }
 
-  function startEdit(item: any) {
+  function startEdit(item: RoomForm) {
     setForm({
       _id: item._id,
       name: item.name || "",
@@ -202,25 +203,25 @@ export default function AdminRoomsPage() {
       bathrooms: item.bathrooms,
       photos: item.photos || [],
       amenityBullets: item.amenityBullets || [],
-      plans: (item.plans || []).map((p: any) => ({
-        title: p.title ?? p.name ?? "",
-        group: p.group,
-        price: p.price,
-        originalPrice: p.originalPrice,
-        listPrice: p.listPrice,
-        currency: p.currency ?? "INR",
-        refundable: p.refundable,
-        inclusions: p.inclusions ?? p.perks ?? [],
-        freeCancellationText: p.freeCancellationText ?? p.cancellationPolicy,
-        offerText: p.offerText,
-        taxesAndFees: p.taxesAndFees,
-        isSuperPackage: p.isSuperPackage,
-        superPackageHeadline: p.superPackageHeadline,
-      })),
+      // plans: (item.plans || []).map((p:Plan  ) => ({
+      //   title: p.title ?? p.name ?? "",
+      //   group: p.group,
+      //   price: p.price,
+      //   originalPrice: p.originalPrice,
+      //   listPrice: p.listPrice,
+      //   currency: p.currency ?? "INR",
+      //   refundable: p.refundable,
+      //   inclusions: p.inclusions ?? p.perks ?? [],
+      //   freeCancellationText: p.freeCancellationText ?? p.cancellationPolicy,
+      //   offerText: p.offerText,
+      //   taxesAndFees: p.taxesAndFees,
+      //   isSuperPackage: p.isSuperPackage,
+      //   superPackageHeadline: p.superPackageHeadline,
+      // })),
     })
     setPhotosStr("")
     setAmenitiesStr((item.amenityBullets || []).join(", "))
-    setPlanInclStr((item.plans || []).map((p: any) => (p.inclusions ?? p.perks ?? []).join(", ")))
+    // setPlanInclStr((item.plans || []).map((p: any) => (p.inclusions ?? p.perks ?? []).join(", ")))
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
@@ -238,8 +239,8 @@ export default function AdminRoomsPage() {
         urls.push(j.url)
       }
       update("photos", [...form.photos, ...urls])
-    } catch (e: any) {
-      alert(e.message || "Upload failed")
+    } catch {
+      alert( "Upload failed")
     } finally {
       setUploading(false)
     }
@@ -408,22 +409,24 @@ export default function AdminRoomsPage() {
                     </label>
                     {form.photos?.length ? (
                       <div className="mt-2 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                        {form.photos.map((src, idx) => (
-                          <div key={src} className="relative group">
-                            <img
-                              src={src || "/placeholder.svg"}
-                              alt="uploaded"
-                              className="h-20 w-full object-cover rounded-md border"
-                            />
-                            <button
-                              onClick={() => removePhoto(idx)}
-                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                              title="Remove photo"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        ))}
+                     {form.photos.map((src, idx) => (
+  <div key={src} className="relative group">
+    <Image
+      src={src || "/placeholder.svg"}
+      alt="uploaded"
+      width={80}
+      height={80}
+      className="h-20 w-full object-cover rounded-md border"
+    />
+    <button
+      onClick={() => removePhoto(idx)}
+      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+      title="Remove photo"
+    >
+      ×
+    </button>
+  </div>
+))}
                       </div>
                     ) : null}
                     <label className="flex flex-col gap-1">
@@ -620,12 +623,12 @@ export default function AdminRoomsPage() {
 
                 {!isLoading && !error && data && data.length > 0 && (
                   <div className="divide-y">
-                    {data.map((r: any) => (
+                    {data.map((r: RoomForm) => (
                       <div key={r._id} className="py-3 flex items-center justify-between">
                         <div>
                           <div className="font-medium">{r.name}</div>
                           <div className="text-sm text-muted-foreground">
-                            slug: {r.slug} · {r.plans?.length ?? 0} plan(s)
+                            slug: {r.slug} ·  plan(s)
                           </div>
                         </div>
                         <Button variant="outline" onClick={() => startEdit(r)}>

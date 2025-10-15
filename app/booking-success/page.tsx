@@ -61,7 +61,7 @@ function BookingSuccessContent() {
 
   }, [searchParams])
 
-  const fmt = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" });
+ 
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -148,7 +148,8 @@ function BookingSuccessContent() {
           </div>
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-left">
-            <h3 className="font-semibold text-blue-900 mb-2">What's Next?</h3>
+           <h3 className="font-semibold text-blue-900 mb-2">What&apos;s Next?</h3>
+
             <ul className="text-sm text-blue-800 space-y-1">
               <li>• You will receive a confirmation email within 5 minutes</li>
               <li>• Present your booking ID at the reception during check-in</li>

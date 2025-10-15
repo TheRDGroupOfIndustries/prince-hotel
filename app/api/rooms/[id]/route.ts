@@ -31,10 +31,26 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     }).lean()
     if (!updated) return NextResponse.json({ error: "Room not found" }, { status: 404 })
     return NextResponse.json({ data: updated })
-  } catch (err: any) {
-    const msg = err?.code === 11000 ? "Duplicate slug. Provide a unique slug." : err?.message || "Failed to update room"
-    return NextResponse.json({ error: msg }, { status: 400 })
+  } catch (err: unknown) {
+  let msg = "Failed to update room";
+
+  if (err instanceof Error) {
+    msg = err.message;
   }
+
+  // Handle MongoDB duplicate key error
+  if (
+    typeof err === "object" &&
+    err !== null &&
+    "code" in err &&
+    (err as { code?: number }).code === 11000
+  ) {
+    msg = "Duplicate slug. Provide a unique slug.";
+  }
+
+  return NextResponse.json({ error: msg }, { status: 400 });
+}
+
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
