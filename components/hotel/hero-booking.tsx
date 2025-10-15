@@ -5,7 +5,7 @@ import { Gallery } from "./gallery";
 import { Card } from "@/components/base/card";
 import { Button } from "@/components/base/button";
 import type { RoomType } from "@/types/hotel";
-import { Star, Check, Dot, Award, ShieldCheck, MapPin } from "lucide-react";
+import { Star,StarHalf, Check, Dot, Award, ShieldCheck, MapPin } from "lucide-react";
 import { Playfair_Display } from "next/font/google";
 
 const playfair = Playfair_Display({
@@ -16,15 +16,16 @@ const playfair = Playfair_Display({
 const StarRating = ({ rating }: { rating: number }) => {
   const totalStars = 5;
   const fullStars = Math.floor(rating);
+  const hasHalfStar = rating - fullStars >= 0.5;
+
   return (
     <div className="flex items-center">
-      {[...Array(totalStars)].map((_, i) => (
-        <Star
-          key={i}
-          className={`h-5 w-5 ${
-            i < fullStars ? "text-yellow-400 fill-yellow-400" : "text-gray-300"
-          }`}
-        />
+      {[...Array(fullStars)].map((_, i) => (
+        <Star key={i} className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+      ))}
+      {hasHalfStar && <StarHalf className="h-5 w-5 fill-yellow-400 text-yellow-400" />}
+      {[...Array(totalStars - fullStars - (hasHalfStar ? 1 : 0))].map((_, i) => (
+        <Star key={i + fullStars + 1} className="h-5 w-5 text-gray-300" />
       ))}
     </div>
   );
