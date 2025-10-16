@@ -273,12 +273,12 @@ export function RoomBookingCard({ room, checkInDate, checkOutDate }: Props) {
         )} */}
 
         {/* Date Display */}
-        {checkInDate && checkOutDate && (
+        {/* {checkInDate && checkOutDate && (
           <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
             <Calendar className="w-4 h-4" />
             <span>{formatDate(checkInDate)} - {formatDate(checkOutDate)}</span>
           </div>
-        )}
+        )} */}
 
         <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-muted-foreground">
           {room.view && <div className="flex items-center gap-2"><Eye size={16} /> {room.view}</div>}
@@ -364,11 +364,15 @@ export function RoomBookingCard({ room, checkInDate, checkOutDate }: Props) {
           <div className="mt-3 space-y-2 text-sm">
             <div className="flex justify-between items-start">
               <div>
-                {priceBreakdown.numberOfRooms > 1 ? (
-                  <span className="text-gray-600">Room Price ({priceBreakdown.numberOfRooms} x ₹{fmt.format(priceBreakdown.basePrice)})</span>
-                ) : (
-                  <span className="text-gray-600">Base Price (for 2 Adults)</span>
-                )}
+               {priceBreakdown.numberOfRooms > 1 ? (
+  <span className="text-gray-600">
+    Room Price ({priceBreakdown.numberOfRooms} × ₹{fmt.format(priceBreakdown.basePrice)}) — 
+    You will get <span className="font-semibold">{priceBreakdown.numberOfRooms}</span> rooms
+  </span>
+) : (
+  <span className="text-gray-600">Base Price (for 2 adults)</span>
+)}
+
                 {/* {priceBreakdown.isDynamicPricing && (
                   <div className="flex items-center gap-1 mt-1">
                     <span className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">

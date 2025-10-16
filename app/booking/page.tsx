@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { format, differenceInDays, addDays } from 'date-fns'
-import { CalendarIcon, Mail, Phone, Loader2, Clock } from 'lucide-react'
+import { CalendarIcon, Mail, Phone, Loader2, Clock, UserPlus, X } from 'lucide-react'
 
 // --- Type Definitions ---
 interface RazorpayOptions {
@@ -116,7 +116,14 @@ function BookingPageContent() {
   const [checkOutDate, setCheckOutDate] = useState<Date>(() => resetTimeToMidnight(addDays(new Date(), 2)));
   
   const [primaryGuest, setPrimaryGuest] = useState({ email: '', phone: '' });
-  const [guests, setGuests] = useState<Guest[]>([]);
+  const [guests, setGuests] = useState<Guest[]>([
+    {
+      id: 'guest-1',
+      title: 'Mr',
+      firstName: '',
+      lastName: ''
+    }
+  ]);
   
   const [totalNights, setTotalNights] = useState(2);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -130,13 +137,15 @@ function BookingPageContent() {
         .then(data => {
           if (data.success) {
             setQuoteData(data.details);
-            setGuests(Array.from({ length: data.details.selections.adults }, (_, i) => ({
-              id: `guest-${i + 1}`,
+            
+            // Initialize with primary guest only
+            setGuests([{
+              id: 'guest-1',
               title: 'Mr',
               firstName: '',
               lastName: ''
-            })));
-            
+            }]);
+
             const createdAt = new Date(data.details.createdAt).getTime();
             const expiresAt = createdAt + (15 * 60 * 1000); // 15 minutes
             const now = Date.now();
@@ -232,6 +241,30 @@ function BookingPageContent() {
     setGuests(guests.map(guest => 
       guest.id === id ? { ...guest, [field]: value } : guest
     ));
+  };
+
+  const addGuest = () => {
+    const newGuest: Guest = {
+      id: `guest-${Date.now()}`,
+      title: 'Mr',
+      firstName: '',
+      lastName: ''
+    };
+    setGuests([...guests, newGuest]);
+  };
+
+  const removeGuest = (id: string) => {
+    // Prevent removing the primary guest (first guest)
+    if (id === 'guest-1') return;
+    setGuests(guests.filter(guest => guest.id !== id));
+  };
+
+  const isPrimaryGuestValid = () => {
+    const primary = guests[0];
+    return primary?.firstName.trim() !== '' && 
+           primary?.lastName.trim() !== '' && 
+           primaryGuest.email.trim() !== '' && 
+           primaryGuest.phone.trim() !== '';
   };
 
   const loadRazorpayScript = () => {
@@ -421,14 +454,40 @@ function BookingPageContent() {
             </Card>
 
             <Card className="p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-6">Guest Details</h3>
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-gray-900">Guest Details</h3>
+                <Button 
+                  variant="outline" 
+                  onClick={addGuest}
+                  className="flex items-center gap-2"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  Add Guest
+                </Button>
+              </div>
               <div className="space-y-6">
                 {guests.map((guest, index) => (
-                  <div key={guest.id} className="border border-gray-200 rounded-lg p-4">
-                    <h4 className="font-semibold text-gray-900 mb-4">Adult {index + 1} {index === 0 && '(Primary)'}</h4>
+                  <div key={guest.id} className="border border-gray-200 rounded-lg p-4 relative">
+                    {/* Remove button for additional guests (not primary) */}
+                    {index > 0 && (
+                      <button
+                        onClick={() => removeGuest(guest.id)}
+                        className="absolute top-3 right-3 text-gray-400 hover:text-red-500 transition-colors"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    )}
+                    
+                    <h4 className="font-semibold text-gray-900 mb-4">
+                      {index === 0 ? 'Primary Guest' : `Guest ${index + 1}`}
+                      {index === 0 && <span className="text-sm text-red-500 ml-2">* Required</span>}
+                    </h4>
+                    
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor={`title-${guest.id}`}>Title</Label>
+                        <Label htmlFor={`title-${guest.id}`}>
+                          Title {index === 0 && <span className="text-red-500">*</span>}
+                        </Label>
                         <Select value={guest.title} onValueChange={(value) => updateGuest(guest.id, 'title', value)}>
                           <SelectTrigger><SelectValue /></SelectTrigger>
                           <SelectContent>
@@ -440,53 +499,76 @@ function BookingPageContent() {
                       </div>
                       <div className="md:col-span-3 grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor={`firstName-${guest.id}`}>First Name</Label>
+                          <Label htmlFor={`firstName-${guest.id}`}>
+                            First Name {index === 0 && <span className="text-red-500">*</span>}
+                          </Label>
                           <Input 
                             id={`firstName-${guest.id}`} 
                             type="text" 
                             value={guest.firstName} 
                             onChange={(e) => updateGuest(guest.id, 'firstName', e.target.value)} 
                             placeholder="First Name" 
+                            required={index === 0}
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor={`lastName-${guest.id}`}>Last Name</Label>
+                          <Label htmlFor={`lastName-${guest.id}`}>
+                            Last Name {index === 0 && <span className="text-red-500">*</span>}
+                          </Label>
                           <Input 
                             id={`lastName-${guest.id}`} 
                             type="text" 
                             value={guest.lastName} 
                             onChange={(e) => updateGuest(guest.id, 'lastName', e.target.value)} 
                             placeholder="Last Name" 
+                            required={index === 0}
                           />
                         </div>
                       </div>
                     </div>
+                    
+                    {/* Contact info only for primary guest */}
                     {index === 0 && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                         <div className="space-y-2">
-                          <Label htmlFor="email"><Mail className="w-4 h-4 inline mr-2" /> Email Address</Label>
+                          <Label htmlFor="email">
+                            <Mail className="w-4 h-4 inline mr-2" /> 
+                            Email Address <span className="text-red-500">*</span>
+                          </Label>
                           <Input 
                             id="email" 
                             type="email" 
                             value={primaryGuest.email} 
                             onChange={(e) => setPrimaryGuest({...primaryGuest, email: e.target.value})} 
                             placeholder="email@example.com" 
+                            required
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="phone"><Phone className="w-4 h-4 inline mr-2" /> Mobile Number</Label>
+                          <Label htmlFor="phone">
+                            <Phone className="w-4 h-4 inline mr-2" /> 
+                            Mobile Number <span className="text-red-500">*</span>
+                          </Label>
                           <Input 
                             id="phone" 
                             type="tel" 
                             value={primaryGuest.phone} 
                             onChange={(e) => setPrimaryGuest({...primaryGuest, phone: e.target.value})} 
                             placeholder="+91 " 
+                            required
                           />
                         </div>
                       </div>
                     )}
                   </div>
                 ))}
+              </div>
+              
+              {/* Helper text */}
+              <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
+                <p className="text-sm text-gray-600">
+                  <strong>Note:</strong> Only primary guest information is required. Additional guests are optional.
+                </p>
               </div>
             </Card>
           </div>
@@ -550,7 +632,7 @@ function BookingPageContent() {
               <Button 
                 className="w-full mt-6 py-3 text-lg"
                 onClick={handlePayNow}
-                disabled={!guests[0]?.firstName || !guests[0]?.lastName || !primaryGuest.email || !primaryGuest.phone || isProcessing || timeLeft <= 0}
+                disabled={!isPrimaryGuestValid() || isProcessing || timeLeft <= 0}
               >
                 {isProcessing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</> : 'Pay Now'}
               </Button>
