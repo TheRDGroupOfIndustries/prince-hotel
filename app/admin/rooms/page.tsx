@@ -7,21 +7,32 @@ import { Button } from "@/components/base/button"
 import { BookingsSection } from "@/components/admin/booking"
 import Image from "next/image"
 
-// type Plan = {
-//   title: string
-//   group: "room-only" | "breakfast"
-//   price: number
-//   originalPrice?: number
-//   listPrice?: number
-//   currency?: string
-//   refundable?: boolean
-//   inclusions?: string[]
-//   freeCancellationText?: string
-//   offerText?: string
-//   taxesAndFees?: string
-//   isSuperPackage?: boolean
-//   superPackageHeadline?: string
-// }
+type RatePlanGroup = "room-only" | "breakfast"
+
+type Plan = {
+  title: string
+  group: RatePlanGroup
+  price: number
+  originalPrice?: number
+  listPrice?: number
+  currency?: string
+  refundable?: boolean
+  inclusions?: string[]
+  freeCancellationText?: string
+  offerText?: string
+  taxesAndFees?: string
+  isSuperPackage?: boolean
+  superPackageHeadline?: string
+}
+
+type DynamicPricing = {
+  _id?: string
+  startDate: string
+  endDate: string
+  price: number
+  inventory: number
+  enabled: boolean
+}
 
 type RoomForm = {
   _id?: string
@@ -36,7 +47,8 @@ type RoomForm = {
   inventory?: number
   photos: string[]
   amenityBullets: string[]
-  // plans: Plan[]
+  plans: Plan[]
+  dynamicPricing: DynamicPricing[]
 }
 
 const fetcher = (url: string) =>
@@ -74,7 +86,8 @@ export default function AdminRoomsPage() {
   const { data, error, isLoading, mutate } = useSWR<RoomForm[]>("/api/rooms", fetcher, {
     revalidateOnFocus: false,
   })
-   useEffect(() => {
+  
+  useEffect(() => {
     console.log("✅ SWR Data:", data)
     console.log("⚠️ SWR Error:", error)
     console.log("⏳ SWR Loading:", isLoading)
@@ -99,6 +112,7 @@ export default function AdminRoomsPage() {
           superPackageHeadline: "",
         },
       ],
+      dynamicPricing: [],
     }),
     [],
   )
@@ -110,42 +124,103 @@ export default function AdminRoomsPage() {
   const [photosStr, setPhotosStr] = useState<string>("")
   const [amenitiesStr, setAmenitiesStr] = useState<string>("")
   
-
   const [uploading, setUploading] = useState(false)
+
+  // Dynamic pricing form
+  const [dynamicPriceForm, setDynamicPriceForm] = useState<DynamicPricing>({
+    startDate: "",
+    endDate: "",
+    price: 0,
+    inventory: 0,
+    enabled: true,
+  })
 
   function update<K extends keyof RoomForm>(key: K, value: RoomForm[K]) {
     setForm((f) => ({ ...f, [key]: value }))
   }
-  // function updatePlan(index: number, patch: Partial<Plan>) {
-  //   setForm((f) => {
-  //     const plans = [...f.plans]
-  //     plans[index] = { ...plans[index], ...patch }
-  //     return { ...f, plans }
-  //   })
-  // }
-  // function addPlan() {
-  //   setForm((f) => ({
-  //     ...f,
-  //     plans: [
-  //       ...f.plans,
-  //       {
-  //         title: "Room With Free Cancellation | Breakfast only",
-  //         group: "breakfast",
-  //         price: 2200,
-  //         currency: "INR",
-  //         refundable: true,
-  //         freeCancellationText: "Free Cancellation till 24 hrs before check in",
-  //         isSuperPackage: false,
-  //         superPackageHeadline: "",
-  //       },
-  //     ],
-  //   }))
-  //   setPlanInclStr((arr) => [...arr, ""])
-  // }
-  // function removePlan(i: number) {
-  //   setForm((f) => ({ ...f, plans: f.plans.filter((_, idx) => idx !== i) }))
-  //   setPlanInclStr((arr) => arr.filter((_, idx) => idx !== i))
-  // }
+
+  function updateDynamicPriceForm<K extends keyof DynamicPricing>(key: K, value: DynamicPricing[K]) {
+    setDynamicPriceForm((f) => ({ ...f, [key]: value }))
+  }
+
+  function addDynamicPrice() {
+    if (!dynamicPriceForm.startDate || !dynamicPriceForm.endDate) {
+      alert("Please select start and end dates")
+      return
+    }
+    if (dynamicPriceForm.price <= 0) {
+      alert("Please enter a valid price")
+      return
+    }
+    if (dynamicPriceForm.inventory < 0) {
+      alert("Please enter a valid inventory")
+      return
+    }
+
+    // Check for date conflicts
+    const startDate = new Date(dynamicPriceForm.startDate)
+    const endDate = new Date(dynamicPriceForm.endDate)
+    
+    if (startDate >= endDate) {
+      alert("End date must be after start date")
+      return
+    }
+
+    const hasConflict = form.dynamicPricing.some((dp) => {
+      if (!dp._id) return false // Skip the one we're potentially editing
+      const existingStart = new Date(dp.startDate)
+      const existingEnd = new Date(dp.endDate)
+      return (
+        (startDate <= existingEnd && endDate >= existingStart) &&
+        dp._id !== dynamicPriceForm._id
+      )
+    })
+
+    if (hasConflict) {
+      alert("This date range conflicts with an existing dynamic pricing rule")
+      return
+    }
+
+    if (dynamicPriceForm._id) {
+      // Update existing
+      setForm((f) => ({
+        ...f,
+        dynamicPricing: f.dynamicPricing.map((dp) =>
+          dp._id === dynamicPriceForm._id ? { ...dynamicPriceForm } : dp
+        ),
+      }))
+    } else {
+      // Add new
+      setForm((f) => ({
+        ...f,
+        dynamicPricing: [...f.dynamicPricing, { ...dynamicPriceForm, _id: Date.now().toString() }],
+      }))
+    }
+
+    // Reset form
+    setDynamicPriceForm({
+      startDate: "",
+      endDate: "",
+      price: 0,
+      inventory: 0,
+      enabled: true,
+    })
+  }
+
+  function editDynamicPrice(item: DynamicPricing) {
+    setDynamicPriceForm({
+      ...item,
+      startDate: item.startDate.split('T')[0], // Format for date input
+      endDate: item.endDate.split('T')[0],
+    })
+  }
+
+  function removeDynamicPrice(id: string) {
+    setForm((f) => ({
+      ...f,
+      dynamicPricing: f.dynamicPricing.filter((dp) => dp._id !== id),
+    }))
+  }
 
   async function save() {
     // Merge uploaded photos (form.photos) with manually entered URLs (photosStr)
@@ -163,14 +238,13 @@ export default function AdminRoomsPage() {
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean),
-      // plans: form.plans.map((p, i) => ({
-      //   ...p,
-      //   inclusions: (planInclStr[i] || "")
-      //     .split(",")
-      //     .map((s) => s.trim())
-      //     .filter(Boolean),
-      // })),
+      dynamicPricing: form.dynamicPricing.map((dp) => ({
+        ...dp,
+        startDate: new Date(dp.startDate),
+        endDate: new Date(dp.endDate),
+      })),
     }
+
     const res = await fetch(isEditing ? `/api/rooms/${form._id || form.slug}` : "/api/rooms", {
       method: isEditing ? "PUT" : "POST",
       headers: { "Content-Type": "application/json" },
@@ -181,7 +255,13 @@ export default function AdminRoomsPage() {
       setForm(emptyForm)
       setPhotosStr("")
       setAmenitiesStr("")
-      // setPlanInclStr([])
+      setDynamicPriceForm({
+        startDate: "",
+        endDate: "",
+        price: 0,
+        inventory: 0,
+        enabled: true,
+      })
       await mutate()
       alert("Saved!")
     } else {
@@ -203,25 +283,25 @@ export default function AdminRoomsPage() {
       bathrooms: item.bathrooms,
       photos: item.photos || [],
       amenityBullets: item.amenityBullets || [],
-      // plans: (item.plans || []).map((p:Plan  ) => ({
-      //   title: p.title ?? p.name ?? "",
-      //   group: p.group,
-      //   price: p.price,
-      //   originalPrice: p.originalPrice,
-      //   listPrice: p.listPrice,
-      //   currency: p.currency ?? "INR",
-      //   refundable: p.refundable,
-      //   inclusions: p.inclusions ?? p.perks ?? [],
-      //   freeCancellationText: p.freeCancellationText ?? p.cancellationPolicy,
-      //   offerText: p.offerText,
-      //   taxesAndFees: p.taxesAndFees,
-      //   isSuperPackage: p.isSuperPackage,
-      //   superPackageHeadline: p.superPackageHeadline,
-      // })),
+      plans: item.plans || [],
+      dynamicPricing: (item.dynamicPricing || []).map((dp: DynamicPricing) => ({
+        _id: dp._id,
+        startDate: new Date(dp.startDate).toISOString().split('T')[0],
+        endDate: new Date(dp.endDate).toISOString().split('T')[0],
+        price: dp.price,
+        inventory: dp.inventory,
+        enabled: dp.enabled !== false,
+      })),
     })
     setPhotosStr("")
     setAmenitiesStr((item.amenityBullets || []).join(", "))
-    // setPlanInclStr((item.plans || []).map((p: any) => (p.inclusions ?? p.perks ?? []).join(", ")))
+    setDynamicPriceForm({
+      startDate: "",
+      endDate: "",
+      price: 0,
+      inventory: 0,
+      enabled: true,
+    })
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
@@ -240,7 +320,7 @@ export default function AdminRoomsPage() {
       }
       update("photos", [...form.photos, ...urls])
     } catch {
-      alert( "Upload failed")
+      alert("Upload failed")
     } finally {
       setUploading(false)
     }
@@ -294,8 +374,6 @@ export default function AdminRoomsPage() {
               </li>
             </ul>
           </Card>
-
-         
         </aside>
 
         {/* Content */}
@@ -368,25 +446,123 @@ export default function AdminRoomsPage() {
                         onChange={(e) => update("sizeSqm", Number(e.target.value))}
                       />
                     </label>
-                     <label className="flex flex-col gap-1">
+                    <label className="flex flex-col gap-1">
                       <span className="text-sm text-muted-foreground">Base Price</span>
                       <input
-                        type="text"
+                        type="number"
                         className="border rounded-md px-3 py-2 bg-background"
                         value={form.basePrice || 0}
                         onChange={(e) => update("basePrice", Number(e.target.value))}
                       />
                     </label>
-                     <label className="flex flex-col gap-1">
-                      <span className="text-sm text-muted-foreground">Inventory</span>
+                    <label className="flex flex-col gap-1">
+                      <span className="text-sm text-muted-foreground">Default Inventory</span>
                       <input
-                        type="text"
+                        type="number"
                         className="border rounded-md px-3 py-2 bg-background"
                         value={form.inventory || 0}
                         onChange={(e) => update("inventory", Number(e.target.value))}
                       />
                     </label>
                   </div>
+                </div>
+
+                {/* Dynamic Pricing */}
+                <div className="pt-4 border-t">
+                  <h3 className="text-base font-medium mb-3 text-foreground">Dynamic Pricing</h3>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                    <label className="flex flex-col gap-1">
+                      <span className="text-sm text-muted-foreground">Start Date</span>
+                      <input
+                        type="date"
+                        className="border rounded-md px-3 py-2 bg-background"
+                        value={dynamicPriceForm.startDate}
+                        onChange={(e) => updateDynamicPriceForm("startDate", e.target.value)}
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1">
+                      <span className="text-sm text-muted-foreground">End Date</span>
+                      <input
+                        type="date"
+                        className="border rounded-md px-3 py-2 bg-background"
+                        value={dynamicPriceForm.endDate}
+                        onChange={(e) => updateDynamicPriceForm("endDate", e.target.value)}
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1">
+                      <span className="text-sm text-muted-foreground">Price</span>
+                      <input
+                        type="number"
+                        className="border rounded-md px-3 py-2 bg-background"
+                        value={dynamicPriceForm.price}
+                        onChange={(e) => updateDynamicPriceForm("price", Number(e.target.value))}
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1">
+                      <span className="text-sm text-muted-foreground">Inventory</span>
+                      <input
+                        type="number"
+                        className="border rounded-md px-3 py-2 bg-background"
+                        value={dynamicPriceForm.inventory}
+                        onChange={(e) => updateDynamicPriceForm("inventory", Number(e.target.value))}
+                      />
+                    </label>
+                  </div>
+                  <div className="flex gap-2 mb-4">
+                    <Button onClick={addDynamicPrice}>
+                      {dynamicPriceForm._id ? "Update Rule" : "Add Rule"}
+                    </Button>
+                    {dynamicPriceForm._id && (
+                      <Button 
+                        variant="outline" 
+                       
+                        onClick={() => setDynamicPriceForm({
+                          startDate: "",
+                          endDate: "",
+                          price: 0,
+                          inventory: 0,
+                          enabled: true,
+                        })}
+                      >
+                        Cancel
+                      </Button>
+                    )}
+                  </div>
+
+                  {form.dynamicPricing.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium">Active Pricing Rules</h4>
+                      {form.dynamicPricing.map((rule) => (
+                        <div key={rule._id} className="flex items-center justify-between p-3 border rounded-md">
+                          <div className="flex-1">
+                            <div className="text-sm font-medium">
+                              {new Date(rule.startDate).toLocaleDateString()} - {new Date(rule.endDate).toLocaleDateString()}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              Price: ₹{rule.price} • Inventory: {rule.inventory}
+                              {!rule.enabled && " • Disabled"}
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                            
+                              onClick={() => editDynamicPrice(rule)}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="accent"
+                             
+                              onClick={() => removeDynamicPrice(rule._id!)}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Media & Amenities */}
@@ -409,24 +585,24 @@ export default function AdminRoomsPage() {
                     </label>
                     {form.photos?.length ? (
                       <div className="mt-2 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                     {form.photos.map((src, idx) => (
-  <div key={src} className="relative group">
-    <Image
-      src={src || "/placeholder.svg"}
-      alt="uploaded"
-      width={80}
-      height={80}
-      className="h-20 w-full object-cover rounded-md border"
-    />
-    <button
-      onClick={() => removePhoto(idx)}
-      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-      title="Remove photo"
-    >
-      ×
-    </button>
-  </div>
-))}
+                        {form.photos.map((src, idx) => (
+                          <div key={src} className="relative group">
+                            <Image
+                              src={src || "/placeholder.svg"}
+                              alt="uploaded"
+                              width={80}
+                              height={80}
+                              className="h-20 w-full object-cover rounded-md border"
+                            />
+                            <button
+                              onClick={() => removePhoto(idx)}
+                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                              title="Remove photo"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     ) : null}
                     <label className="flex flex-col gap-1">
@@ -450,145 +626,6 @@ export default function AdminRoomsPage() {
                     </label>
                   </div>
                 </div>
-
-                {/* Rate Plans */}
-                {/* <div className="pt-4 border-t">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-base font-medium text-foreground">Rate Plans</h3>
-                    <Button onClick={addPlan} variant="accent">
-                      Add Plan
-                    </Button>
-                  </div>
-                  <div className="mt-4 space-y-4">
-                    {form.plans.map((p, i) => (
-                      <Card key={i} className="p-4 border">
-                        <div className="grid md:grid-cols-3 gap-3">
-                          <label className="flex flex-col gap-1">
-                            <span className="text-sm text-muted-foreground">Title</span>
-                            <input
-                              className="border rounded-md px-3 py-2 bg-background"
-                              value={p.title}
-                              onChange={(e) => updatePlan(i, { title: e.target.value })}
-                            />
-                          </label>
-                          <label className="flex flex-col gap-1">
-                            <span className="text-sm text-muted-foreground">Group</span>
-                            <select
-                              className="border rounded-md px-3 py-2 bg-background"
-                              value={p.group}
-                              onChange={(e) => updatePlan(i, { group: e.target.value as any })}
-                            >
-                              <option value="room-only">room-only</option>
-                              <option value="breakfast">breakfast</option>
-                            </select>
-                          </label>
-                          <label className="flex flex-col gap-1">
-                            <span className="text-sm text-muted-foreground">Currency</span>
-                            <input
-                              className="border rounded-md px-3 py-2 bg-background"
-                              value={p.currency || "INR"}
-                              onChange={(e) => updatePlan(i, { currency: e.target.value })}
-                            />
-                          </label>
-
-                          <label className="flex flex-col gap-1">
-                            <span className="text-sm text-muted-foreground">Price</span>
-                            <input
-                              type="number"
-                              className="border rounded-md px-3 py-2 bg-background"
-                              value={p.price}
-                              onChange={(e) => updatePlan(i, { price: Number(e.target.value) })}
-                            />
-                          </label>
-                          <label className="flex flex-col gap-1">
-                            <span className="text-sm text-muted-foreground">Original/List Price (struck)</span>
-                            <input
-                              type="number"
-                              className="border rounded-md px-3 py-2 bg-background"
-                              value={p.originalPrice ?? p.listPrice ?? 0}
-                              onChange={(e) =>
-                                updatePlan(i, {
-                                  originalPrice: Number(e.target.value),
-                                  listPrice: Number(e.target.value),
-                                })
-                              }
-                            />
-                          </label>
-                          <label className="flex items-center gap-2 pt-6">
-                            <input
-                              type="checkbox"
-                              checked={!!p.refundable}
-                              onChange={(e) => updatePlan(i, { refundable: e.target.checked })}
-                            />
-                            <span className="text-sm">Refundable</span>
-                          </label>
-
-                          <label className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={!!p.isSuperPackage}
-                              onChange={(e) => updatePlan(i, { isSuperPackage: e.target.checked })}
-                            />
-                            <span className="text-sm">Mark as Super Package</span>
-                          </label>
-                          <label className="flex flex-col gap-1 md:col-span-3">
-                            <span className="text-sm text-muted-foreground">Super Package Headline (banner text)</span>
-                            <input
-                              className="border rounded-md px-3 py-2 bg-background"
-                              value={p.superPackageHeadline || ""}
-                              onChange={(e) => updatePlan(i, { superPackageHeadline: e.target.value })}
-                              placeholder="Enjoy benefits worth ₹1260 at just ₹504"
-                            />
-                          </label>
-
-                          <label className="flex flex-col gap-1 md:col-span-3">
-                            <span className="text-sm text-muted-foreground">Inclusions (comma separated)</span>
-                            <input
-                              className="border rounded-md px-3 py-2 bg-background"
-                              value={planInclStr[i] || ""}
-                              onChange={(e) =>
-                                setPlanInclStr((arr) => {
-                                  const next = [...arr]
-                                  next[i] = e.target.value
-                                  return next
-                                })
-                              }
-                            />
-                          </label>
-                          <label className="flex flex-col gap-1 md:col-span-3">
-                            <span className="text-sm text-muted-foreground">Free Cancellation Text</span>
-                            <input
-                              className="border rounded-md px-3 py-2 bg-background"
-                              value={p.freeCancellationText || ""}
-                              onChange={(e) => updatePlan(i, { freeCancellationText: e.target.value })}
-                            />
-                          </label>
-                          <label className="flex flex-col gap-1">
-                            <span className="text-sm text-muted-foreground">Offer Text</span>
-                            <input
-                              className="border rounded-md px-3 py-2 bg-background"
-                              value={p.offerText || ""}
-                              onChange={(e) => updatePlan(i, { offerText: e.target.value })}
-                            />
-                          </label>
-                          <label className="flex flex-col gap-1">
-                            <span className="text-sm text-muted-foreground">Taxes & Fees Line</span>
-                            <input
-                              className="border rounded-md px-3 py-2 bg-background"
-                              value={p.taxesAndFees || ""}
-                              onChange={(e) => updatePlan(i, { taxesAndFees: e.target.value })}
-                            />
-                          </label>
-                        </div>
-                        <div className="mt-3 text-right">
-                          <Button variant="outline" onClick={() => removePlan(i)}>
-                            Remove
-                          </Button>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                </div> */}
 
                 <div className="flex items-center gap-3 pt-2">
                   <Button onClick={save}>{isEditing ? "Update Room" : "Create Room"}</Button>
@@ -628,7 +665,8 @@ export default function AdminRoomsPage() {
                         <div>
                           <div className="font-medium">{r.name}</div>
                           <div className="text-sm text-muted-foreground">
-                            slug: {r.slug} ·  plan(s)
+                            slug: {r.slug} • Base: ₹{r.basePrice} • 
+                            Dynamic Rules: {r.dynamicPricing?.length || 0}
                           </div>
                         </div>
                         <Button variant="outline" onClick={() => startEdit(r)}>

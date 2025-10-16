@@ -31,6 +31,40 @@ const StarRating = ({ rating }: { rating: number }) => {
   );
 };
 
+// Helper function to get dynamic pricing for current date
+function getDynamicPricingForToday(room: RoomType): { price: number; inventory: number; isDynamic: boolean } {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Check if any dynamic pricing rule applies to today
+  const activeRule = room.dynamicPricing?.find((rule) => {
+    if (!rule.enabled) return false;
+    
+    const ruleStart = new Date(rule.startDate);
+    const ruleEnd = new Date(rule.endDate);
+    
+    ruleStart.setHours(0, 0, 0, 0);
+    ruleEnd.setHours(23, 59, 59, 999);
+    
+    return today >= ruleStart && today <= ruleEnd;
+  });
+
+  if (activeRule) {
+    return {
+      price: activeRule.price,
+      inventory: activeRule.inventory,
+      isDynamic: true
+    };
+  }
+
+  // Return default/base values
+  return {
+    price: room.basePrice,
+    inventory: room.inventory,
+    isDynamic: false
+  };
+}
+
 function FeaturedRoomCard({
   room,
   onBookNow,
@@ -40,18 +74,37 @@ function FeaturedRoomCard({
   onBookNow: () => void;
   priceFormatter: Intl.NumberFormat;
 }) {
+  // Get dynamic pricing for today
+  const dynamicPricing = getDynamicPricingForToday(room);
+  const displayPrice = dynamicPricing.price;
+  const isDynamicPrice = dynamicPricing.isDynamic;
+
   return (
     <Card className="p-4 border shadow-sm">
       <div className="flex justify-between items-start gap-4">
-        <div>
+        <div className="flex-1">
           <h3 className="text-xl font-bold text-gray-900">{room.name}</h3>
           <p className="text-sm text-gray-700">Ideal for 2 Adults</p>
+          
+          {/* Dynamic Pricing Badge */}
+          {/* {isDynamicPrice && (
+            <div className="mt-1 inline-flex items-center px-2 py-1 bg-amber-100 text-amber-800 text-xs font-medium rounded-full">
+              Special Rate Today
+            </div>
+          )} */}
         </div>
         <div className="text-right flex-shrink-0">
-          <p className="text-xl font-bold text-gray-900">
-            {priceFormatter.format(room.basePrice)}
-            <span className="text-xs font-normal text-gray-500">/night</span>
-          </p>
+          <div className="flex flex-col items-end">
+            {/* {isDynamicPrice && room.basePrice !== displayPrice && (
+              <span className="text-sm text-gray-500 line-through mb-1">
+                {priceFormatter.format(room.basePrice)}
+              </span>
+            )} */}
+            <p className="text-xl font-bold text-gray-900">
+              {priceFormatter.format(displayPrice)}
+              <span className="text-xs font-normal text-gray-500">/night</span>
+            </p>
+          </div>
           <Button className="mt-1 w-full" onClick={onBookNow}>
             Book Now
           </Button>
@@ -74,6 +127,26 @@ function FeaturedRoomCard({
           <Dot className="h-5 w-5 text-gray-400 flex-shrink-0" />
           <span>Breakfast (optional): ₹150 per adult</span>
         </li>
+        
+        {/* Dynamic Pricing Info */}
+        {/* {isDynamicPrice && (
+          <li className="flex items-center gap-2">
+            <Dot className="h-5 w-5 text-amber-400 flex-shrink-0" />
+            <span className="text-amber-700 font-medium">
+              {displayPrice < room.basePrice ? 'Discounted rate for today!' : 'Special rate for today!'}
+            </span>
+          </li>
+        )} */}
+        
+        {/* Inventory Info */}
+        {dynamicPricing.inventory > 0 && dynamicPricing.inventory < 5 && (
+          <li className="flex items-center gap-2">
+            <Dot className="h-5 w-5 text-red-400 flex-shrink-0" />
+            <span className="text-red-700 font-medium">
+              Only {dynamicPricing.inventory} {dynamicPricing.inventory === 1 ? 'room' : 'rooms'} left!
+            </span>
+          </li>
+        )}
       </ul>
     </Card>
   );
@@ -159,17 +232,24 @@ export function HeroBooking({ images, hotel }: Props) {
         const data = await res.json();
         const allRooms: RoomType[] = data.data || [];
         
-        // Room selection logic
+        // Room selection logic with dynamic pricing consideration
         const deluxeRoom = allRooms.find(r => r.name === 'Deluxe Room');
         const superDeluxeRoom = allRooms.find(r => r.name === 'Super Deluxe Room');
         
         let selectedFeaturedRoom: RoomType | null = null;
-        if (deluxeRoom && deluxeRoom.inventory > 0) {
+        
+        // Check availability considering dynamic pricing
+        const getAvailableInventory = (room: RoomType) => {
+          const dynamicPricing = getDynamicPricingForToday(room);
+          return dynamicPricing.inventory > 0;
+        };
+        
+        if (deluxeRoom && getAvailableInventory(deluxeRoom)) {
           selectedFeaturedRoom = deluxeRoom;
-        } else if (superDeluxeRoom && superDeluxeRoom.inventory > 0) {
+        } else if (superDeluxeRoom && getAvailableInventory(superDeluxeRoom)) {
           selectedFeaturedRoom = superDeluxeRoom;
         } else {
-          selectedFeaturedRoom = allRooms.find(r => r.inventory > 0) || null;
+          selectedFeaturedRoom = allRooms.find(r => getAvailableInventory(r)) || null;
         }
         
         setFeaturedRoom(selectedFeaturedRoom);

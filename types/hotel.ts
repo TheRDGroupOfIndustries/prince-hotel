@@ -12,27 +12,38 @@ export interface RatePlan {
   originalPrice?: number
   listPrice?: number // optional crossed MRP shown in hero/right rail
 }
-
+export interface DynamicPricing {
+  _id: string;
+  startDate: string;
+  endDate: string;
+  price: number;
+  inventory: number;
+  enabled: boolean;
+}
 export interface RoomType {
-  id: string
-  _id: string
-  name: string
-  shortDescription?: string
-  bedInfo?: string
-  sizeSqft?: number
+  id: string;
+  _id: string;
+  name: string;
+  shortDescription?: string;
+  bedInfo?: string;
+  sizeSqft?: number;
   amenityBullets: string[];
-  amenities: string[]
-  basePrice: number // starting price for this room type (used in listing)
-  inventory: number // number of rooms available
-  photos: string[] // image urls (can be placeholder)
-  ratePlans: RatePlan[]
+  amenities: string[];
+  
+  basePrice: number; // starting price for this room type (used in listing)
+  inventory: number; // number of rooms available
+  photos: string[]; // image urls (can be placeholder)
+  ratePlans: RatePlan[];
   occupancy: {
-    adults: number
-    children?: number
-  }
-   view?: string;
+    adults: number;
+    children?: number;
+  };
+  view?: string;
   bedType?: string;
   bathrooms?: number;
+  
+  // Dynamic Pricing Support
+  dynamicPricing?: DynamicPricing[];
 }
 
 export interface ReviewBreakdown {

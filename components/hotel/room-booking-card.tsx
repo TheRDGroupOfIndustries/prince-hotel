@@ -1,13 +1,14 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo} from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/base/button"
 import { Card } from "@/components/base/card"
 import {
   MinusCircle, PlusCircle, Trash2, User, Utensils, IndianRupee,
-  Eye, BedDouble, Ruler, Bath, ChevronLeft, ChevronRight, Loader2
+  Eye, BedDouble, Ruler, Bath, ChevronLeft, ChevronRight, Loader2,
+  Calendar, AlertCircle
 } from "lucide-react"
 
 // --- Define Pricing Constants ---
@@ -17,7 +18,16 @@ const PRICE_BREAKFAST_AP = 150 // For American Plan
 const PRICE_DINNER_AP = 400 // For American Plan
 const MAX_GUESTS_PER_ROOM = 4 // Max adults per room
 
-// --- Define Room Type (with inventory) ---
+// --- Define Room Type (with dynamic pricing) ---
+interface DynamicPricing {
+  _id: string
+  startDate: string
+  endDate: string
+  price: number
+  inventory: number
+  enabled: boolean
+}
+
 interface Room {
   _id: string
   name: string
@@ -29,10 +39,13 @@ interface Room {
   bedType?: string
   sizeSqft?: number
   bathrooms?: number
+  dynamicPricing?: DynamicPricing[]
 }
 
 interface Props {
   room: Room
+  checkInDate?: Date
+  checkOutDate?: Date
 }
 
 // A simple image slider component for rooms with multiple photos
@@ -72,7 +85,64 @@ function RoomImageSlider({ images, roomName }: { images: string[]; roomName: str
   )
 }
 
-export function RoomBookingCard({ room }: Props) {
+// Helper function to get dynamic pricing for specific dates
+// Helper function to get dynamic pricing for specific dates
+function getDynamicPricingForDates(room: Room, checkInDate?: Date, checkOutDate?: Date): { price: number; inventory: number; isDynamic: boolean } {
+  // If no specific dates provided, use base price
+  if (!checkInDate || !checkOutDate) {
+    return {
+      price: room.basePrice,
+      inventory: room.inventory,
+      isDynamic: false
+    }
+  }
+
+  // Check if any dynamic pricing rule applies to these dates
+  const activeRule = room.dynamicPricing?.find((rule) => {
+    if (!rule.enabled) return false
+    
+    const ruleStart = new Date(rule.startDate)
+    const ruleEnd = new Date(rule.endDate)
+    const checkIn = new Date(checkInDate)
+    const checkOut = new Date(checkOutDate)
+    
+    // Set time to midnight for date comparison
+    ruleStart.setHours(0, 0, 0, 0)
+    ruleEnd.setHours(23, 59, 59, 999)
+    checkIn.setHours(0, 0, 0, 0)
+    checkOut.setHours(23, 59, 59, 999)
+    
+    // Check if the ENTIRE stay period falls within the dynamic pricing rule
+    // This ensures dynamic pricing only applies when all selected dates are within the rule's range
+    return checkIn >= ruleStart && checkOut <= ruleEnd
+  })
+
+  if (activeRule) {
+    return {
+      price: activeRule.price,
+      inventory: activeRule.inventory,
+      isDynamic: true
+    }
+  }
+
+  // Return default/base values
+  return {
+    price: room.basePrice,
+    inventory: room.inventory,
+    isDynamic: false
+  }
+}
+
+// Helper function to format date for display
+function formatDate(date: Date): string {
+  return date.toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  })
+}
+
+export function RoomBookingCard({ room, checkInDate, checkOutDate }: Props) {
   const router = useRouter()
 
   const [adults, setAdults] = useState(2)
@@ -80,9 +150,18 @@ export function RoomBookingCard({ room }: Props) {
   const [mealPlan, setMealPlan] = useState<"EP" | "CP" | "AP">("EP")
   const [isLoading, setIsLoading] = useState(false)
 
+  // Get dynamic pricing for the selected dates
+  const dynamicPricing = useMemo(() => 
+    getDynamicPricingForDates(room, checkInDate, checkOutDate),
+    [room, checkInDate, checkOutDate]
+  )
+
   const priceBreakdown = useMemo(() => {
+    const effectiveBasePrice = dynamicPricing.price
+    const effectiveInventory = dynamicPricing.inventory
+    
     const numberOfRooms = Math.ceil(adults / MAX_GUESTS_PER_ROOM)
-    const totalBasePrice = numberOfRooms * room.basePrice
+    const totalBasePrice = numberOfRooms * effectiveBasePrice
     
     let extraAdults = 0
     if (adults > 2) {
@@ -112,7 +191,7 @@ export function RoomBookingCard({ room }: Props) {
 
     return {
       numberOfRooms,
-      basePrice: room.basePrice,
+      basePrice: effectiveBasePrice,
       totalBasePrice,
       extraAdults,
       extraAdultsCost,
@@ -122,10 +201,12 @@ export function RoomBookingCard({ room }: Props) {
       dinnerCost,
       numChargeableForMeals,
       totalPrice,
+      effectiveInventory,
+      isDynamicPricing: dynamicPricing.isDynamic
     }
-  }, [room.basePrice, adults, children, mealPlan])
+  }, [room.basePrice, adults, children, mealPlan, dynamicPricing])
 
-  const hasSufficientInventory = priceBreakdown.numberOfRooms <= room.inventory;
+  const hasSufficientInventory = priceBreakdown.numberOfRooms <= priceBreakdown.effectiveInventory;
 
   const handleAddChild = () => setChildren([...children, { age: 5 }])
   const handleRemoveChild = (index: number) => setChildren(children.filter((_, i) => i !== index))
@@ -136,7 +217,7 @@ export function RoomBookingCard({ room }: Props) {
   }
 
   const handleBookNow = async () => {
-    if (!hasSufficientInventory || room.inventory <= 0) {
+    if (!hasSufficientInventory || priceBreakdown.effectiveInventory <= 0) {
       alert("This room is not available for your selection.")
       return
     }
@@ -150,8 +231,11 @@ export function RoomBookingCard({ room }: Props) {
           adults,
           children,
           mealPlan,
-          // This line correctly sends the number of rooms to your API
           numberOfRooms: priceBreakdown.numberOfRooms,
+          checkInDate: checkInDate?.toISOString(),
+          checkOutDate: checkOutDate?.toISOString(),
+          basePrice: priceBreakdown.basePrice,
+          isDynamicPricing: priceBreakdown.isDynamicPricing
         }),
       })
 
@@ -177,6 +261,24 @@ export function RoomBookingCard({ room }: Props) {
       <div className="p-5 border-b lg:border-b-0 lg:border-r border-gray-200 bg-card">
         <RoomImageSlider images={room.photos} roomName={room.name} />
         <h3 className="mt-4 font-semibold text-xl text-foreground">{room.name}</h3>
+
+        {/* Dynamic Pricing Badge */}
+        {/* {priceBreakdown.isDynamicPricing && checkInDate && checkOutDate && (
+          <div className="mt-2 flex items-center gap-2 p-2 bg-amber-50 border border-amber-200 rounded-md">
+            <Calendar className="w-4 h-4 text-amber-600" />
+            <span className="text-sm text-amber-700 font-medium">
+              Special rate for selected dates
+            </span>
+          </div>
+        )} */}
+
+        {/* Date Display */}
+        {checkInDate && checkOutDate && (
+          <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+            <Calendar className="w-4 h-4" />
+            <span>{formatDate(checkInDate)} - {formatDate(checkOutDate)}</span>
+          </div>
+        )}
 
         <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-muted-foreground">
           {room.view && <div className="flex items-center gap-2"><Eye size={16} /> {room.view}</div>}
@@ -257,15 +359,32 @@ export function RoomBookingCard({ room }: Props) {
 
         <div className="mt-6 pt-5 border-t">
           <h4 className="font-medium text-gray-800">Price Breakdown</h4>
+          
+          {/* Base Price Display with Dynamic Pricing Info */}
           <div className="mt-3 space-y-2 text-sm">
-            <div className="flex justify-between">
-              {priceBreakdown.numberOfRooms > 1 ? (
-                <span className="text-gray-600">Room Price ({priceBreakdown.numberOfRooms} x ₹{fmt.format(priceBreakdown.basePrice)})</span>
-              ) : (
-                <span className="text-gray-600">Base Price (for 2 Adults)</span>
-              )}
-              <span>₹{fmt.format(priceBreakdown.totalBasePrice)}</span>
+            <div className="flex justify-between items-start">
+              <div>
+                {priceBreakdown.numberOfRooms > 1 ? (
+                  <span className="text-gray-600">Room Price ({priceBreakdown.numberOfRooms} x ₹{fmt.format(priceBreakdown.basePrice)})</span>
+                ) : (
+                  <span className="text-gray-600">Base Price (for 2 Adults)</span>
+                )}
+                {/* {priceBreakdown.isDynamicPricing && (
+                  <div className="flex items-center gap-1 mt-1">
+                    <span className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
+                      Special Rate
+                    </span>
+                    {room.basePrice !== priceBreakdown.basePrice && (
+                      <span className="text-xs text-gray-500 line-through">
+                        ₹{fmt.format(room.basePrice)}
+                      </span>
+                    )}
+                  </div>
+                )} */}
+              </div>
+              <span className="font-medium">₹{fmt.format(priceBreakdown.totalBasePrice)}</span>
             </div>
+            
             {priceBreakdown.extraAdultsCost > 0 && (
               <div className="flex justify-between">
                 <span className="text-gray-600">Extra Adult ({priceBreakdown.extraAdults} x ₹{PRICE_EXTRA_ADULT})</span>
@@ -294,13 +413,30 @@ export function RoomBookingCard({ room }: Props) {
 
           <div className="mt-4 pt-3 border-t flex items-center justify-between">
             <p className="text-lg font-bold text-gray-900">Total Per Night</p>
-            <p className="text-lg font-bold text-gray-900 flex items-center"><IndianRupee size={18} />{fmt.format(priceBreakdown.totalPrice)}</p>
+            <p className="text-lg font-bold text-gray-900 flex items-center">
+              <IndianRupee size={18} />
+              {fmt.format(priceBreakdown.totalPrice)}
+            </p>
           </div>
           <p className="text-right text-xs text-gray-500">+ taxes & fees</p>
 
-          {!hasSufficientInventory && room.inventory > 0 && (
+          {/* Inventory Warnings */}
+          {!hasSufficientInventory && priceBreakdown.effectiveInventory > 0 && (
             <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-800 text-sm rounded-md text-center">
-              Only <strong>{room.inventory} {room.inventory === 1 ? 'room' : 'rooms'}</strong> left. Please reduce the number of guests.
+              Only <strong>{priceBreakdown.effectiveInventory} {priceBreakdown.effectiveInventory === 1 ? 'room' : 'rooms'}</strong> available for selected dates. Please reduce the number of guests.
+            </div>
+          )}
+
+          {priceBreakdown.effectiveInventory <= 0 && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-800 text-sm rounded-md text-center">
+              <AlertCircle className="w-4 h-4 inline mr-1" />
+              Sold out for selected dates
+            </div>
+          )}
+
+          {priceBreakdown.isDynamicPricing && priceBreakdown.effectiveInventory > 0 && priceBreakdown.effectiveInventory < 5 && (
+            <div className="mt-2 p-2 bg-amber-50 border border-amber-200 text-amber-700 text-xs rounded-md text-center">
+              Only {priceBreakdown.effectiveInventory} {priceBreakdown.effectiveInventory === 1 ? 'room' : 'rooms'} left at this special rate!
             </div>
           )}
 
@@ -308,9 +444,9 @@ export function RoomBookingCard({ room }: Props) {
             onClick={handleBookNow} 
             variant="accent" 
             className="w-full mt-4" 
-            disabled={isLoading || !hasSufficientInventory || room.inventory <= 0}
+            disabled={isLoading || !hasSufficientInventory || priceBreakdown.effectiveInventory <= 0}
           >
-            {room.inventory <= 0 ? (
+            {priceBreakdown.effectiveInventory <= 0 ? (
               'Sold Out'
             ) : isLoading ? (
               <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</>

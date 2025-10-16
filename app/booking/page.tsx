@@ -45,14 +45,15 @@ interface RazorpayWindow {
 
 declare global {
   interface Window extends RazorpayWindow {
-    // Example: add a custom flag
     isRazorpayLoaded?: boolean;
   }
 }
 
-
 interface PriceBreakdown {
   basePrice?: number;
+  perRoomBasePrice?: number;
+  originalBasePrice?: number;
+  isDynamicPricing?: boolean;
   extraAdultsCost?: number;
   extraChildrenStayCost?: number;
   breakfastCost?: number;
@@ -67,7 +68,7 @@ interface QuoteData {
   selections: {
     adults: number;
     children: { age: number }[];
-    mealPlan: 'EP' | 'CP';
+    mealPlan: 'EP' | 'CP' | 'AP';
   };
   priceBreakdown: PriceBreakdown;
   createdAt: string;
@@ -98,14 +99,21 @@ const formatTime = (seconds: number) => {
   return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
 };
 
+// Helper function to reset time to midnight for consistent date calculations
+const resetTimeToMidnight = (date: Date): Date => {
+  const newDate = new Date(date);
+  newDate.setHours(0, 0, 0, 0);
+  return newDate;
+};
+
 // Inner component that uses useSearchParams
 function BookingPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
   const [quoteData, setQuoteData] = useState<QuoteData | null>(null);
-  const [checkInDate, setCheckInDate] = useState<Date>(() => new Date());
-  const [checkOutDate, setCheckOutDate] = useState<Date>(() => addDays(new Date(), 2));
+  const [checkInDate, setCheckInDate] = useState<Date>(() => resetTimeToMidnight(new Date()));
+  const [checkOutDate, setCheckOutDate] = useState<Date>(() => resetTimeToMidnight(addDays(new Date(), 2)));
   
   const [primaryGuest, setPrimaryGuest] = useState({ email: '', phone: '' });
   const [guests, setGuests] = useState<Guest[]>([]);
@@ -153,23 +161,58 @@ function BookingPageContent() {
     return () => clearInterval(timer);
   }, [timeLeft]);
 
+  // Fixed date calculation logic
   useEffect(() => {
     if (checkInDate && checkOutDate) {
-      const nights = differenceInDays(checkOutDate, checkInDate);
+      const start = resetTimeToMidnight(checkInDate);
+      const end = resetTimeToMidnight(checkOutDate);
+      
+      const nights = differenceInDays(end, start);
       setTotalNights(nights > 0 ? nights : 1);
     }
   }, [checkInDate, checkOutDate]);
+
+  // Fixed date change handlers
+  const handleCheckInChange = (date: Date | undefined) => {
+    if (!date) return;
+    
+    const newCheckIn = resetTimeToMidnight(date);
+    setCheckInDate(newCheckIn);
+    
+    // If check-out is before or equal to new check-in, adjust check-out
+    if (checkOutDate && newCheckIn >= checkOutDate) {
+      const newCheckOut = resetTimeToMidnight(addDays(newCheckIn, 1));
+      setCheckOutDate(newCheckOut);
+    }
+  };
+
+  const handleCheckOutChange = (date: Date | undefined) => {
+    if (!date) return;
+    
+    const newCheckOut = resetTimeToMidnight(date);
+    
+    // Ensure check-out is after check-in
+    if (newCheckOut <= checkInDate) {
+      const minCheckOut = resetTimeToMidnight(addDays(checkInDate, 1));
+      setCheckOutDate(minCheckOut);
+    } else {
+      setCheckOutDate(newCheckOut);
+    }
+  };
 
   const finalPriceSummary = useMemo(() => {
     if (!quoteData) return null;
     const breakdown = quoteData.priceBreakdown;
     
-    const basePriceTotal = (breakdown.basePrice || 0) * totalNights;
+    // Use perRoomBasePrice if available (from dynamic pricing), otherwise use basePrice
+    const basePricePerNight = breakdown.perRoomBasePrice || breakdown.basePrice || 0;
+    const basePriceTotal = basePricePerNight * totalNights * (quoteData.numberOfRooms || 1);
     const extraAdultsCostTotal = (breakdown.extraAdultsCost || 0) * totalNights;
     const extraChildrenStayCostTotal = (breakdown.extraChildrenStayCost || 0) * totalNights;
     const breakfastCostTotal = (breakdown.breakfastCost || 0) * totalNights;
+    const dinnerCostTotal = (breakdown.dinnerCost || 0) * totalNights;
     
-    const subTotal = basePriceTotal + extraAdultsCostTotal + extraChildrenStayCostTotal + breakfastCostTotal;
+    const subTotal = basePriceTotal + extraAdultsCostTotal + extraChildrenStayCostTotal + breakfastCostTotal + dinnerCostTotal;
     const taxes = subTotal * 0.05; // 5% GST
     const finalTotal = subTotal + taxes;
 
@@ -178,6 +221,7 @@ function BookingPageContent() {
       extraAdultsCostTotal,
       extraChildrenStayCostTotal,
       breakfastCostTotal,
+      dinnerCostTotal,
       subTotal, 
       taxes, 
       finalTotal 
@@ -222,6 +266,7 @@ function BookingPageContent() {
           checkOut: checkOutDate.toISOString(),
           nights: totalNights,
           guests: guests.map(g => ({ ...g, email: primaryGuest.email, phone: primaryGuest.phone })),
+          totalAmount: finalPriceSummary.finalTotal
         }),
       });
 
@@ -259,12 +304,11 @@ function BookingPageContent() {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-              bookingData: JSON.stringify(successData) // Pass booking data to backend
+              bookingData: JSON.stringify(successData)
             }),
           });
           const verificationData = await verificationResponse.json();
           if (verificationData.success) {
-            // Pass all details to booking success page via query params
             const params = new URLSearchParams({
               bookingId: successData.bookingId,
               checkIn: successData.checkIn,
@@ -336,7 +380,13 @@ function BookingPageContent() {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
-                      <Calendar mode="single" selected={checkInDate} onSelect={(date) => date && setCheckInDate(date)} disabled={(date) => date < addDays(new Date(), -1)} initialFocus/>
+                      <Calendar 
+                        mode="single" 
+                        selected={checkInDate} 
+                        onSelect={handleCheckInChange} 
+                        disabled={(date) => date < resetTimeToMidnight(new Date())} 
+                        initialFocus
+                      />
                     </PopoverContent>
                   </Popover>
                 </div>
@@ -350,10 +400,23 @@ function BookingPageContent() {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
-                      <Calendar mode="single" selected={checkOutDate} onSelect={(date) => date && setCheckOutDate(date)} disabled={(date) => date <= checkInDate} initialFocus/>
+                      <Calendar 
+                        mode="single" 
+                        selected={checkOutDate} 
+                        onSelect={handleCheckOutChange} 
+                        disabled={(date) => date <= resetTimeToMidnight(checkInDate)} 
+                        initialFocus
+                      />
                     </PopoverContent>
                   </Popover>
                 </div>
+              </div>
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-sm text-blue-800 text-center">
+                  <strong>{totalNights} night{totalNights !== 1 ? 's' : ''}</strong> selected • 
+                  Check-in: {format(checkInDate, 'EEE, MMM d')} • 
+                  Check-out: {format(checkOutDate, 'EEE, MMM d')}
+                </p>
               </div>
             </Card>
 
@@ -378,11 +441,23 @@ function BookingPageContent() {
                       <div className="md:col-span-3 grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor={`firstName-${guest.id}`}>First Name</Label>
-                          <Input id={`firstName-${guest.id}`} type="text" value={guest.firstName} onChange={(e) => updateGuest(guest.id, 'firstName', e.target.value)} placeholder="First Name" />
+                          <Input 
+                            id={`firstName-${guest.id}`} 
+                            type="text" 
+                            value={guest.firstName} 
+                            onChange={(e) => updateGuest(guest.id, 'firstName', e.target.value)} 
+                            placeholder="First Name" 
+                          />
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor={`lastName-${guest.id}`}>Last Name</Label>
-                          <Input id={`lastName-${guest.id}`} type="text" value={guest.lastName} onChange={(e) => updateGuest(guest.id, 'lastName', e.target.value)} placeholder="Last Name" />
+                          <Input 
+                            id={`lastName-${guest.id}`} 
+                            type="text" 
+                            value={guest.lastName} 
+                            onChange={(e) => updateGuest(guest.id, 'lastName', e.target.value)} 
+                            placeholder="Last Name" 
+                          />
                         </div>
                       </div>
                     </div>
@@ -390,11 +465,23 @@ function BookingPageContent() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                         <div className="space-y-2">
                           <Label htmlFor="email"><Mail className="w-4 h-4 inline mr-2" /> Email Address</Label>
-                          <Input id="email" type="email" value={primaryGuest.email} onChange={(e) => setPrimaryGuest({...primaryGuest, email: e.target.value})} placeholder="email@example.com" />
+                          <Input 
+                            id="email" 
+                            type="email" 
+                            value={primaryGuest.email} 
+                            onChange={(e) => setPrimaryGuest({...primaryGuest, email: e.target.value})} 
+                            placeholder="email@example.com" 
+                          />
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="phone"><Phone className="w-4 h-4 inline mr-2" /> Mobile Number</Label>
-                          <Input id="phone" type="tel" value={primaryGuest.phone} onChange={(e) => setPrimaryGuest({...primaryGuest, phone: e.target.value})} placeholder="+91 " />
+                          <Input 
+                            id="phone" 
+                            type="tel" 
+                            value={primaryGuest.phone} 
+                            onChange={(e) => setPrimaryGuest({...primaryGuest, phone: e.target.value})} 
+                            placeholder="+91 " 
+                          />
                         </div>
                       </div>
                     )}
@@ -422,7 +509,7 @@ function BookingPageContent() {
               <h3 className="text-xl font-bold text-gray-900 mb-4">Price Summary</h3>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Base Price ({totalNights} nights)</span>
+                  <span className="text-gray-600">Base Price ({totalNights} night{totalNights !== 1 ? 's' : ''})</span>
                   <span className="font-semibold">{fmt.format(finalPriceSummary.basePriceTotal)}</span>
                 </div>
                 {finalPriceSummary.extraAdultsCostTotal > 0 && (
@@ -441,6 +528,12 @@ function BookingPageContent() {
                   <div className="flex justify-between">
                     <span className="text-gray-600">Breakfast Cost</span>
                     <span className="font-semibold">{fmt.format(finalPriceSummary.breakfastCostTotal)}</span>
+                  </div>
+                )}
+                {quoteData.selections.mealPlan === 'AP' && finalPriceSummary.dinnerCostTotal > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Dinner Cost</span>
+                    <span className="font-semibold">{fmt.format(finalPriceSummary.dinnerCostTotal)}</span>
                   </div>
                 )}
                 <div className="flex justify-between">

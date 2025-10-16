@@ -9,7 +9,6 @@ export async function GET(req: NextRequest) {
 
   await dbConnect()
 
-  // Use a proper filter type instead of any
   const filter: Record<string, unknown> = {}
 
   if (q) {
@@ -39,7 +38,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
   }
 
-  // Minimal validation
   if (!payload?.name || !payload?.slug) {
     return NextResponse.json({ error: "name and slug are required" }, { status: 400 })
   }
@@ -51,7 +49,6 @@ export async function POST(req: NextRequest) {
     const created = await Room.create(payload)
     return NextResponse.json({ data: created }, { status: 201 })
   } catch (err) {
-    // Use unknown type for error and narrow it
     const error = err as { code?: number; message?: string }
     const msg =
       error?.code === 11000
@@ -59,4 +56,4 @@ export async function POST(req: NextRequest) {
         : error?.message || "Failed to create room"
     return NextResponse.json({ error: msg }, { status: 400 })
   }
-}
+} 
