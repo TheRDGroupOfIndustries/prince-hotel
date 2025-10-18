@@ -3,6 +3,7 @@
 import useSWR from "swr"
 import { RoomBookingCard } from "@/components/hotel/room-booking-card"
 import { Card } from "@/components/base/card"
+import { useDateContext } from "@/app/context/dateContext"
 
 // Room type from API (updated with dynamic pricing)
 export type ApiRoom = {
@@ -33,12 +34,18 @@ const fetcher = (url: string): Promise<ApiRoom[]> =>
     .then((j) => j.data);
 
 export default function RoomsFromApi({ initialRooms }: { initialRooms?: ApiRoom[] }) {
-  const { data: rooms, error, isLoading } = useSWR<ApiRoom[]>("/api/rooms", fetcher, {
-    fallbackData: initialRooms,
-  })
+  // Get dates from global context
+  const { checkInDate, checkOutDate } = useDateContext()
 
-  // Use current date - no need for frequent updates since page will refresh on navigation
-  const currentDate = new Date()
+  // Create a cache key that includes dates to trigger re-fetch when dates change
+  const cacheKey = checkInDate && checkOutDate 
+    ? `/api/rooms?checkIn=${checkInDate.toISOString()}&checkOut=${checkOutDate.toISOString()}`
+    : '/api/rooms';
+
+  const { data: rooms, error, isLoading } = useSWR<ApiRoom[]>(cacheKey, fetcher, {
+    fallbackData: initialRooms,
+    revalidateOnFocus: false, // Optional: prevent re-fetch on window focus
+  })
 
   if (isLoading) {
     return (
@@ -59,7 +66,7 @@ export default function RoomsFromApi({ initialRooms }: { initialRooms?: ApiRoom[
   if (!rooms || rooms.length === 0) {
     return (
       <Card className="p-4">
-        <div className="text-sm text-muted-foreground">No rooms are available at the moment.</div>
+        <div className="text-sm text-muted-foreground">No rooms are available for the selected dates.</div>
       </Card>
     )
   }
@@ -69,13 +76,13 @@ export default function RoomsFromApi({ initialRooms }: { initialRooms?: ApiRoom[
 
   return (
     <div className="space-y-6">
-      {/* Rooms List - uses current date in background */}
+      {/* Rooms List - uses dates from global context */}
       {sortedRooms.map((room) => (
         <div key={room._id} id={`room-${room._id}`}>
           <RoomBookingCard 
             room={room} 
-            checkInDate={currentDate}
-            checkOutDate={currentDate}
+            checkInDate={checkInDate}
+            checkOutDate={checkOutDate}
           />
         </div>
       ))}

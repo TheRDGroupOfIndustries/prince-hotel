@@ -11,6 +11,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { format, differenceInDays, addDays } from 'date-fns'
 import { CalendarIcon, Mail, Phone, Loader2, Clock, UserPlus, X } from 'lucide-react'
+import { useDateContext } from "@/app/context/dateContext"
 
 // --- Type Definitions ---
 interface RazorpayOptions {
@@ -111,9 +112,18 @@ function BookingPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
+  // Get dates from global context
+  const { checkInDate: contextCheckIn, checkOutDate: contextCheckOut, setCheckInDate, setCheckOutDate } = useDateContext();
+  
   const [quoteData, setQuoteData] = useState<QuoteData | null>(null);
-  const [checkInDate, setCheckInDate] = useState<Date>(() => resetTimeToMidnight(new Date()));
-  const [checkOutDate, setCheckOutDate] = useState<Date>(() => resetTimeToMidnight(addDays(new Date(), 2)));
+  
+  // Use context dates or fallback to defaults
+  const [checkInDate, setLocalCheckInDate] = useState<Date>(() => 
+    contextCheckIn || resetTimeToMidnight(new Date())
+  );
+  const [checkOutDate, setLocalCheckOutDate] = useState<Date>(() => 
+    contextCheckOut || resetTimeToMidnight(addDays(new Date(), 2))
+  );
   
   const [primaryGuest, setPrimaryGuest] = useState({ email: '', phone: '' });
   const [guests, setGuests] = useState<Guest[]>([
@@ -128,6 +138,19 @@ function BookingPageContent() {
   const [totalNights, setTotalNights] = useState(2);
   const [isProcessing, setIsProcessing] = useState(false);
   const [timeLeft, setTimeLeft] = useState(15 * 60);
+
+  // Sync local state with context when context changes
+  useEffect(() => {
+    if (contextCheckIn) {
+      setLocalCheckInDate(resetTimeToMidnight(contextCheckIn));
+    }
+  }, [contextCheckIn]);
+
+  useEffect(() => {
+    if (contextCheckOut) {
+      setLocalCheckOutDate(resetTimeToMidnight(contextCheckOut));
+    }
+  }, [contextCheckOut]);
 
   useEffect(() => {
     const quoteId = searchParams.get('quoteId');
@@ -181,17 +204,19 @@ function BookingPageContent() {
     }
   }, [checkInDate, checkOutDate]);
 
-  // Fixed date change handlers
+  // Fixed date change handlers - update both local state and global context
   const handleCheckInChange = (date: Date | undefined) => {
     if (!date) return;
     
     const newCheckIn = resetTimeToMidnight(date);
-    setCheckInDate(newCheckIn);
+    setLocalCheckInDate(newCheckIn);
+    setCheckInDate(newCheckIn); // Update global context
     
     // If check-out is before or equal to new check-in, adjust check-out
     if (checkOutDate && newCheckIn >= checkOutDate) {
       const newCheckOut = resetTimeToMidnight(addDays(newCheckIn, 1));
-      setCheckOutDate(newCheckOut);
+      setLocalCheckOutDate(newCheckOut);
+      setCheckOutDate(newCheckOut); // Update global context
     }
   };
 
@@ -203,9 +228,11 @@ function BookingPageContent() {
     // Ensure check-out is after check-in
     if (newCheckOut <= checkInDate) {
       const minCheckOut = resetTimeToMidnight(addDays(checkInDate, 1));
-      setCheckOutDate(minCheckOut);
+      setLocalCheckOutDate(minCheckOut);
+      setCheckOutDate(minCheckOut); // Update global context
     } else {
-      setCheckOutDate(newCheckOut);
+      setLocalCheckOutDate(newCheckOut);
+      setCheckOutDate(newCheckOut); // Update global context
     }
   };
 
@@ -399,11 +426,11 @@ function BookingPageContent() {
       <div className="container max-w-4xl mx-auto px-4">
         <h1 className="text-3xl font-bold text-center mb-8">Complete Your Booking</h1>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
-            <Card className="p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Select Your Dates</h3>
+          <div className="lg:col-span-2 space-y-5">
+            <Card className="p-4">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Your Selected Dates</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label htmlFor="checkin">Check-in Date</Label>
                   <Popover>
                     <PopoverTrigger asChild>
@@ -442,7 +469,7 @@ function BookingPageContent() {
                       />
                     </PopoverContent>
                   </Popover>
-                </div>
+                </div> */}
               </div>
               <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
                 <p className="text-sm text-blue-800 text-center">

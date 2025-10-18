@@ -7,8 +7,7 @@ import { Button } from "@/components/base/button"
 import { Card } from "@/components/base/card"
 import {
   MinusCircle, PlusCircle, Trash2, User, Utensils, IndianRupee,
-  Eye, BedDouble, Ruler, Bath, ChevronLeft, ChevronRight, Loader2,
-  Calendar, AlertCircle
+  Eye, BedDouble, Ruler, Bath, ChevronLeft, ChevronRight, Loader2, AlertCircle
 } from "lucide-react"
 
 // --- Define Pricing Constants ---
@@ -44,8 +43,8 @@ interface Room {
 
 interface Props {
   room: Room
-  checkInDate?: Date
-  checkOutDate?: Date
+  checkInDate?: Date | null
+  checkOutDate?: Date | null
 }
 
 // A simple image slider component for rooms with multiple photos
@@ -134,13 +133,13 @@ function getDynamicPricingForDates(room: Room, checkInDate?: Date, checkOutDate?
 }
 
 // Helper function to format date for display
-function formatDate(date: Date): string {
-  return date.toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric'
-  })
-}
+// function formatDate(date: Date): string {
+//   return date.toLocaleDateString('en-IN', {
+//     day: 'numeric',
+//     month: 'short',
+//     year: 'numeric'
+//   })
+// }
 
 export function RoomBookingCard({ room, checkInDate, checkOutDate }: Props) {
   const router = useRouter()
@@ -152,7 +151,7 @@ export function RoomBookingCard({ room, checkInDate, checkOutDate }: Props) {
 
   // Get dynamic pricing for the selected dates
   const dynamicPricing = useMemo(() => 
-    getDynamicPricingForDates(room, checkInDate, checkOutDate),
+    getDynamicPricingForDates(room, checkInDate || undefined, checkOutDate || undefined),
     [room, checkInDate, checkOutDate]
   )
 
@@ -349,10 +348,10 @@ export function RoomBookingCard({ room, checkInDate, checkOutDate }: Props) {
                     <p className="font-semibold">CP Plan (With Breakfast)</p>
                     <p className="text-sm text-gray-600 mt-1">Adds breakfast at <strong>₹{fmt.format(PRICE_BREAKFAST_CP)} per person</strong>.</p>
                 </button>
-                <button onClick={() => setMealPlan("AP")} className={`p-3 border rounded-md text-left transition-colors ${mealPlan === 'AP' ? 'border-primary bg-primary/10' : 'hover:bg-gray-50'}`}>
+                {/* <button onClick={() => setMealPlan("AP")} className={`p-3 border rounded-md text-left transition-colors ${mealPlan === 'AP' ? 'border-primary bg-primary/10' : 'hover:bg-gray-50'}`}>
                     <p className="font-semibold">AP Plan (All Meals)</p>
                     <p className="text-sm text-gray-600 mt-1">Adds breakfast (₹{fmt.format(PRICE_BREAKFAST_AP)}) & dinner (₹{fmt.format(PRICE_DINNER_AP)}).</p>
-                </button>
+                </button> */}
             </div>
           </div>
         </div>

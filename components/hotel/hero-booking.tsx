@@ -5,8 +5,9 @@ import { Gallery } from "./gallery";
 import { Card } from "@/components/base/card";
 import { Button } from "@/components/base/button";
 import type { RoomType } from "@/types/hotel";
-import { Star, StarHalf, Check, Dot, Award, ShieldCheck, MapPin } from "lucide-react";
+import { Star, StarHalf, Check, Award, ShieldCheck, MapPin, Calendar, Search } from "lucide-react";
 import { Playfair_Display } from "next/font/google";
+import { useDateContext } from "@/app/context/dateContext";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -31,163 +32,186 @@ const StarRating = ({ rating }: { rating: number }) => {
   );
 };
 
-// Helper function to get dynamic pricing for current date
-function getDynamicPricingForToday(room: RoomType): { price: number; inventory: number; isDynamic: boolean } {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+// ------------------------------
+// Dynamic Pricing Helper with Date Context
+// ------------------------------
+function getDynamicPricingForDates(
+  room: RoomType,
+  checkIn: Date | null,
+  checkOut: Date | null
+): { price: number; inventory: number; isDynamic: boolean } {
+  if (!checkIn || !checkOut) {
+    // Fallback to today-based pricing if dates not selected
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-  // Check if any dynamic pricing rule applies to today
-  const activeRule = room.dynamicPricing?.find((rule) => {
-    if (!rule.enabled) return false;
-    
-    const ruleStart = new Date(rule.startDate);
-    const ruleEnd = new Date(rule.endDate);
-    
-    ruleStart.setHours(0, 0, 0, 0);
-    ruleEnd.setHours(23, 59, 59, 999);
-    
-    return today >= ruleStart && today <= ruleEnd;
-  });
+    const activeRule = room.dynamicPricing?.find((rule) => {
+      if (!rule.enabled) return false;
+      const start = new Date(rule.startDate);
+      const end = new Date(rule.endDate);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+      return today >= start && today <= end;
+    });
 
-  if (activeRule) {
-    return {
-      price: activeRule.price,
-      inventory: activeRule.inventory,
-      isDynamic: true
-    };
+    if (activeRule) {
+      return {
+        price: activeRule.price,
+        inventory: activeRule.inventory,
+        isDynamic: true,
+      };
+    }
+
+    return { price: room.basePrice, inventory: room.inventory, isDynamic: false };
   }
 
-  // Return default/base values
+  // Calculate pricing based on selected dates
+  const nights = Math.max(1, Math.ceil((+checkOut - +checkIn) / (1000 * 60 * 60 * 24)));
+  let totalPrice = 0;
+  let isDynamic = false;
+  let minInventory = room.inventory;
+
+  for (let i = 0; i < nights; i++) {
+    const date = new Date(checkIn);
+    date.setDate(checkIn.getDate() + i);
+
+    const rule = room.dynamicPricing?.find((r) => {
+      if (!r.enabled) return false;
+      const start = new Date(r.startDate);
+      const end = new Date(r.endDate);
+      return date >= start && date <= end;
+    });
+
+    if (rule) {
+      totalPrice += rule.price;
+      isDynamic = true;
+      minInventory = Math.min(minInventory, rule.inventory);
+    } else {
+      totalPrice += room.basePrice;
+      minInventory = Math.min(minInventory, room.inventory);
+    }
+  }
+
   return {
-    price: room.basePrice,
-    inventory: room.inventory,
-    isDynamic: false
+    price: Math.round(totalPrice / nights), // Average price per night
+    inventory: minInventory,
+    isDynamic,
   };
 }
 
-function FeaturedRoomCard({
-  room,
-  onBookNow,
-  priceFormatter,
-}: {
-  room: RoomType;
-  onBookNow: () => void;
-  priceFormatter: Intl.NumberFormat;
-}) {
-  // Get dynamic pricing for today
-  const dynamicPricing = getDynamicPricingForToday(room);
-  const displayPrice = dynamicPricing.price;
-  const isDynamicPrice = dynamicPricing.isDynamic;
+// ------------------------------
+// Date Picker Card Component (Used for both Desktop and Mobile)
+// ------------------------------
+function DatePickerCard({ onSearchAvailability }: { onSearchAvailability: () => void }) {
+  const { checkInDate, checkOutDate, setCheckInDate, setCheckOutDate } = useDateContext();
 
   return (
     <Card className="p-4 border shadow-sm">
-      <div className="flex justify-between items-start gap-4">
-        <div className="flex-1">
-          <h3 className="text-xl font-bold text-gray-900">{room.name}</h3>
-          <p className="text-sm text-gray-700">Ideal for 2 Adults</p>
-          
-          {/* Dynamic Pricing Badge */}
-          {/* {isDynamicPrice && (
-            <div className="mt-1 inline-flex items-center px-2 py-1 bg-amber-100 text-amber-800 text-xs font-medium rounded-full">
-              Special Rate Today
-            </div>
-          )} */}
-        </div>
-        <div className="text-right flex-shrink-0">
-          <div className="flex flex-col items-end">
-            {/* {isDynamicPrice && room.basePrice !== displayPrice && (
-              <span className="text-sm text-gray-500 line-through mb-1">
-                {priceFormatter.format(room.basePrice)}
-              </span>
-            )} */}
-            <p className="text-xl font-bold text-gray-900">
-              {priceFormatter.format(displayPrice)}
-              <span className="text-xs font-normal text-gray-500">/night</span>
-            </p>
+      <div className="flex items-center gap-2 mb-3">
+        <Calendar className="h-5 w-5 text-blue-600" />
+        <h3 className="text-lg font-bold text-gray-900">Check Availability</h3>
+      </div>
+      
+      <div className="space-y-3">
+        {/* Date Inputs */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-gray-700">Check-in Date</label>
+            <input
+              type="date"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+              value={checkInDate ? checkInDate.toISOString().split("T")[0] : ""}
+              onChange={(e) => setCheckInDate(e.target.value ? new Date(e.target.value) : null)}
+            />
           </div>
-          <Button className="mt-1 w-full" onClick={onBookNow}>
-            Book Now
-          </Button>
-        </div>
-      </div>
-      <ul className="mt-3 border-t pt-3 space-y-1 text-sm text-gray-700">
-        <li className="flex items-center gap-2">
-          <Dot className="h-5 w-5 text-gray-400 flex-shrink-0" />
-          <span>Base price is for 2 Adults</span>
-        </li>
-        <li className="flex items-center gap-2">
-          <Dot className="h-5 w-5 text-gray-400 flex-shrink-0" />
-          <span>Extra Adult charge: ₹300 per person</span>
-        </li>
-        <li className="flex items-center gap-2">
-          <Dot className="h-5 w-5 text-gray-400 flex-shrink-0" />
-          <span>Children below 9 years stay free</span>
-        </li>
-        <li className="flex items-center gap-2">
-          <Dot className="h-5 w-5 text-gray-400 flex-shrink-0" />
-          <span>Breakfast (optional): ₹150 per adult</span>
-        </li>
-        
-        {/* Dynamic Pricing Info */}
-        {/* {isDynamicPrice && (
-          <li className="flex items-center gap-2">
-            <Dot className="h-5 w-5 text-amber-400 flex-shrink-0" />
-            <span className="text-amber-700 font-medium">
-              {displayPrice < room.basePrice ? 'Discounted rate for today!' : 'Special rate for today!'}
-            </span>
-          </li>
-        )} */}
-        
-        {/* Inventory Info */}
-        {dynamicPricing.inventory > 0 && dynamicPricing.inventory < 5 && (
-          <li className="flex items-center gap-2">
-            <Dot className="h-5 w-5 text-red-400 flex-shrink-0" />
-            <span className="text-red-700 font-medium">
-              Only {dynamicPricing.inventory} {dynamicPricing.inventory === 1 ? 'room' : 'rooms'} left!
-            </span>
-          </li>
-        )}
-      </ul>
-    </Card>
-  );
-}
 
-// Skeleton component for loading state
-function FeaturedRoomCardSkeleton() {
-  return (
-    <Card className="p-4 border shadow-sm animate-pulse">
-      <div className="flex justify-between items-start gap-4">
-        <div className="flex-1">
-          <div className="h-6 bg-gray-300 rounded w-3/4 mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-gray-700">Check-out Date</label>
+            <input
+              type="date"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+              value={checkOutDate ? checkOutDate.toISOString().split("T")[0] : ""}
+              onChange={(e) => setCheckOutDate(e.target.value ? new Date(e.target.value) : null)}
+            />
+          </div>
         </div>
-        <div className="text-right flex-shrink-0">
-          <div className="h-6 bg-gray-300 rounded w-20 mb-2"></div>
-          <div className="h-9 bg-gray-300 rounded w-24"></div>
-        </div>
-      </div>
-      <div className="mt-3 border-t pt-3 space-y-2">
-        <div className="flex items-center gap-2">
-          <Dot className="h-5 w-5 text-gray-300" />
-          <div className="h-4 bg-gray-200 rounded w-full"></div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Dot className="h-5 w-5 text-gray-300" />
-          <div className="h-4 bg-gray-200 rounded w-full"></div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Dot className="h-5 w-5 text-gray-300" />
-          <div className="h-4 bg-gray-200 rounded w-full"></div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Dot className="h-5 w-5 text-gray-300" />
-          <div className="h-4 bg-gray-200 rounded w-full"></div>
-        </div>
+
+        {/* Search Button */}
+        <Button 
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5"
+          onClick={onSearchAvailability}
+        >
+          <Search className="h-4 w-4 mr-2" />
+          Search Availability
+        </Button>
       </div>
     </Card>
   );
 }
 
+// ------------------------------
+// Featured Room Card
+// ------------------------------
+// function FeaturedRoomCard({
+//   room,
+//   onBookNow,
+//   priceFormatter,
+// }: {
+//   room: RoomType;
+//   onBookNow: () => void;
+//   priceFormatter: Intl.NumberFormat;
+// }) {
+//   const { checkInDate, checkOutDate } = useDateContext();
+//   const dynamicPricing = getDynamicPricingForDates(room, checkInDate, checkOutDate);
+//   const displayPrice = dynamicPricing.price;
+//   const isDynamicPrice = dynamicPricing.isDynamic;
+
+//   return (
+//     <Card className="p-4 border shadow-sm">
+//       <div className="flex justify-between items-start gap-4">
+//         <div className="flex-1">
+//           <h3 className="text-xl font-bold text-gray-900">{room.name}</h3>
+//           <p className="text-sm text-gray-700">Ideal for 2 Adults</p>
+//         </div>
+//         <div className="text-right flex-shrink-0">
+//           <div className="flex flex-col items-end">
+//             <p className="text-xl font-bold text-gray-900">
+//               {priceFormatter.format(displayPrice)}
+//               <span className="text-xs font-normal text-gray-500">/night</span>
+//             </p>
+//           </div>
+//           <Button className="mt-1 w-full" onClick={onBookNow}>
+//             Book Now
+//           </Button>
+//         </div>
+//       </div>
+//     </Card>
+//   );
+// }
+
+// ------------------------------
+// Skeleton Component
+// ------------------------------
+// function FeaturedRoomCardSkeleton() {
+//   return (
+//     <Card className="p-4 border shadow-sm animate-pulse">
+//       <div className="flex justify-between items-start gap-4">
+//         <div className="flex-1">
+//           <div className="h-6 bg-gray-300 rounded w-3/4 mb-2"></div>
+//           <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+//         </div>
+//         <div className="text-right flex-shrink-0">
+//           <div className="h-6 bg-gray-300 rounded w-20 mb-2"></div>
+//           <div className="h-9 bg-gray-300 rounded w-24"></div>
+//         </div>
+//       </div>
+//     </Card>
+//   );
+// }
+
+// ------------------------------
+// Main Hero Booking Component
+// ------------------------------
 interface Props {
   images: string[];
   hotel: {
@@ -211,11 +235,12 @@ export function HeroBooking({ images, hotel }: Props) {
     minimumFractionDigits: 0,
   });
 
+  const { checkInDate, checkOutDate } = useDateContext();
   const [featuredRoom, setFeaturedRoom] = useState<RoomType | null>(null);
   const [showFeatured, setShowFeatured] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch rooms and select featured room
+  // Fetch rooms and select featured room based on priority (Deluxe → Super Deluxe → Premium)
   useEffect(() => {
     async function fetchRooms() {
       try {
@@ -233,22 +258,34 @@ export function HeroBooking({ images, hotel }: Props) {
         const allRooms: RoomType[] = data.data || [];
         
         // Room selection logic with dynamic pricing consideration
-        const deluxeRoom = allRooms.find(r => r.name === 'Deluxe Room');
-        const superDeluxeRoom = allRooms.find(r => r.name === 'Super Deluxe Room');
+        // Priority: Deluxe → Super Deluxe → Premium → Any available room
+        const deluxeRoom = allRooms.find(r => 
+          r.name.toLowerCase().includes('deluxe') && !r.name.toLowerCase().includes('super')
+        );
+        const superDeluxeRoom = allRooms.find(r => 
+          r.name.toLowerCase().includes('super deluxe')
+        );
+        const premiumRoom = allRooms.find(r => 
+          r.name.toLowerCase().includes('premium')
+        );
         
         let selectedFeaturedRoom: RoomType | null = null;
         
-        // Check availability considering dynamic pricing
+        // Check availability considering dynamic pricing for selected dates
         const getAvailableInventory = (room: RoomType) => {
-          const dynamicPricing = getDynamicPricingForToday(room);
+          const dynamicPricing = getDynamicPricingForDates(room, checkInDate, checkOutDate);
           return dynamicPricing.inventory > 0;
         };
         
+        // Priority selection logic
         if (deluxeRoom && getAvailableInventory(deluxeRoom)) {
           selectedFeaturedRoom = deluxeRoom;
         } else if (superDeluxeRoom && getAvailableInventory(superDeluxeRoom)) {
           selectedFeaturedRoom = superDeluxeRoom;
+        } else if (premiumRoom && getAvailableInventory(premiumRoom)) {
+          selectedFeaturedRoom = premiumRoom;
         } else {
+          // Fallback to any available room
           selectedFeaturedRoom = allRooms.find(r => getAvailableInventory(r)) || null;
         }
         
@@ -266,7 +303,7 @@ export function HeroBooking({ images, hotel }: Props) {
     }
 
     fetchRooms();
-  }, []);
+  }, [checkInDate, checkOutDate]); // Re-fetch when dates change
 
   const scrollToFeaturedRoom = () => {
     if (!featuredRoom) return;
@@ -276,17 +313,25 @@ export function HeroBooking({ images, hotel }: Props) {
     }
   };
 
+  const scrollToRoomsSection = () => {
+    const roomsSection = document.getElementById('available-rooms');
+    if (roomsSection) {
+      roomsSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   return (
     <div className="bg-slate-50 p-4 rounded-lg">
+      {/* Header with title and rating */}
       <div className="mb-4">
-        <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-3 flex-nowrap">
-          <h1
-            className={`text-md sm:text-3xl font-bold text-gray-800 whitespace-nowrap ${playfair.className}`}
-          >
-            {hotel.name}
-          </h1>
-          <div className="flex-shrink-0 flex items-center space-x-1 scale-90 sm:scale-100">
-            <StarRating rating={hotel.rating} />
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className={`text-md sm:text-3xl font-bold text-gray-800 ${playfair.className}`}>
+              {hotel.name}
+            </h1>
+            <div className="flex-shrink-0 flex items-center space-x-1 scale-90 sm:scale-100">
+              <StarRating rating={hotel.rating} />
+            </div>
           </div>
         </div>
       </div>
@@ -310,8 +355,13 @@ export function HeroBooking({ images, hotel }: Props) {
             </p>
           </div>
 
-          {/* Mobile: Show skeleton while loading, actual card when loaded */}
-          <div className="block lg:hidden mt-4">
+          {/* Mobile Date Picker Card - Below About Property */}
+          <div className="block lg:hidden">
+            <DatePickerCard onSearchAvailability={scrollToRoomsSection} />
+          </div>
+
+          {/* Mobile Featured Room Card */}
+          {/* <div className="block lg:hidden mt-4">
             {isLoading ? (
               <FeaturedRoomCardSkeleton />
             ) : showFeatured && featuredRoom ? (
@@ -321,7 +371,7 @@ export function HeroBooking({ images, hotel }: Props) {
                 priceFormatter={fmt}
               />
             ) : null}
-          </div>
+          </div> */}
 
           <div className="pt-4">
             <h2 className="text-xl font-bold text-gray-800 mb-3">Amenities</h2>
@@ -337,7 +387,10 @@ export function HeroBooking({ images, hotel }: Props) {
         </div>
 
         <aside className="hidden lg:block lg:col-span-1 space-y-4">
-          {/* Desktop: Show skeleton while loading, actual card when loaded */}
+          {/* Desktop Date Picker Card */}
+          <DatePickerCard onSearchAvailability={scrollToRoomsSection} />
+          
+          {/* Desktop Featured Room Card
           {isLoading ? (
             <FeaturedRoomCardSkeleton />
           ) : showFeatured && featuredRoom ? (
@@ -346,7 +399,7 @@ export function HeroBooking({ images, hotel }: Props) {
               onBookNow={scrollToFeaturedRoom}
               priceFormatter={fmt}
             />
-          ) : null}
+          ) : null} */}
           
           <Card className="p-3 border shadow-sm">
             <div className="flex items-center justify-between">
