@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format, differenceInDays, addDays } from 'date-fns'
 import { CalendarIcon, Mail, Phone, Loader2, Clock, UserPlus, X } from 'lucide-react'
 import { useDateContext } from "@/app/context/dateContext"
-
+import { facebookEvents } from '@/lib/facebookPixel'
 // --- Type Definitions ---
 interface RazorpayOptions {
   key: string | undefined;
@@ -162,7 +162,11 @@ function BookingPageContent() {
         .then(data => {
           if (data.success) {
             setQuoteData(data.details);
-            
+             facebookEvents.viewContent(
+            `Booking: ${data.details.roomName}`, 
+            `quote-${quoteId}`,
+            data.details.priceBreakdown.totalPrice
+          )
             // Initialize with primary guest only
             setGuests([{
               id: 'guest-1',
@@ -313,6 +317,8 @@ function BookingPageContent() {
   };
 
   const handlePayNow = async () => {
+     if (!finalPriceSummary) return;
+     facebookEvents.initiateCheckout(finalPriceSummary.finalTotal)
     const quoteId = searchParams.get('quoteId');
     if (!quoteData || !finalPriceSummary || !quoteId) return;
 
@@ -373,6 +379,7 @@ function BookingPageContent() {
           });
           const verificationData = await verificationResponse.json();
           if (verificationData.success) {
+             facebookEvents.purchase(finalPriceSummary.finalTotal, 'INR')
             const params = new URLSearchParams({
               bookingId: successData.bookingId,
               checkIn: successData.checkIn,

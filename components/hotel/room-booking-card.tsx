@@ -9,6 +9,7 @@ import {
   MinusCircle, PlusCircle, Trash2, User, Utensils, IndianRupee,
   Eye, BedDouble, Ruler, Bath, ChevronLeft, ChevronRight, Loader2, AlertCircle, Hotel, ChevronUp, ChevronDown
 } from "lucide-react"
+import { facebookEvents } from '@/lib/facebookPixel'
 
 // --- Define Pricing Constants ---
 const PRICE_EXTRA_ADULT = 300
@@ -295,6 +296,11 @@ export function RoomBookingCard({ room, checkInDate, checkOutDate }: Props) {
   const [isMobileStickyExpanded, setIsMobileStickyExpanded] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
 
+  // Track room view when component mounts
+  useEffect(() => {
+    facebookEvents.viewContent(room.name, room._id, room.basePrice)
+  }, [room.name, room._id, room.basePrice])
+
   // Get dynamic pricing for the selected dates
   const dynamicPricing = useMemo(() => 
     getDynamicPricingForDates(room, checkInDate || undefined, checkOutDate || undefined),
@@ -398,6 +404,9 @@ export function RoomBookingCard({ room, checkInDate, checkOutDate }: Props) {
   }
 
   const handleBookNow = async () => {
+    // Track booking initiation
+    facebookEvents.initiateCheckout(priceBreakdown.totalPrice)
+    
     if (!hasSufficientInventory || priceBreakdown.effectiveInventory <= 0) {
       alert("This room is not available for your selection.")
       return

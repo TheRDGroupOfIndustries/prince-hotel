@@ -8,7 +8,7 @@ import type { RoomType } from "@/types/hotel";
 import { Star, StarHalf, Check, Award, ShieldCheck, MapPin, Calendar, Search } from "lucide-react";
 import { Playfair_Display } from "next/font/google";
 import { useDateContext } from "@/app/context/dateContext";
-
+import { facebookEvents } from "@/lib/facebookPixel";
 const playfair = Playfair_Display({
   subsets: ["latin"],
   weight: ["700"],
@@ -242,6 +242,7 @@ export function HeroBooking({ images, hotel }: Props) {
 
   // Fetch rooms and select featured room based on priority (Deluxe → Super Deluxe → Premium)
   useEffect(() => {
+    facebookEvents.viewContent('Hotel Page', hotel.name, hotel.startingPrice)
     async function fetchRooms() {
       try {
         setIsLoading(true);
@@ -313,12 +314,15 @@ export function HeroBooking({ images, hotel }: Props) {
     }
   };
 
-  const scrollToRoomsSection = () => {
-    const roomsSection = document.getElementById('available-rooms');
-    if (roomsSection) {
-      roomsSection.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
+ const scrollToRoomsSection = () => {
+  // Track when user searches for availability
+  facebookEvents.search(`Hotel: ${hotel.name}`)
+  
+  const roomsSection = document.getElementById('available-rooms')
+  if (roomsSection) {
+    roomsSection.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
+}
 
   return (
     <div className="bg-slate-50 p-4 rounded-lg">

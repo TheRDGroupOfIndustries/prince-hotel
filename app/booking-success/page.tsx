@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/base/card"
 import { CheckCircle, Mail, Phone, Users, Moon } from 'lucide-react'
+import { facebookEvents } from '@/lib/facebookPixel'
 
 // Inner component that uses useSearchParams
 function BookingSuccessContent() {
@@ -44,6 +45,10 @@ function BookingSuccessContent() {
       guests,
       nights
     });
+
+    // Track successful purchase
+    const amountValue = searchParams.get('totalAmount') ? parseInt(searchParams.get('totalAmount')!) : 0;
+    facebookEvents.purchase(amountValue, 'INR')
 
     // Optional: Store booking details in localStorage for persistence
     localStorage.setItem('lastBooking', JSON.stringify({
