@@ -99,6 +99,8 @@ export default function AdminRoomsPage() {
       slug: "",
       amenityBullets: [],
       photos: [],
+      inventory: 0, // Initialize with 0
+      basePrice: 0, // Initialize with 0
       plans: [
         {
           title: "Room With Free Cancellation",
@@ -223,6 +225,8 @@ export default function AdminRoomsPage() {
   }
 
   async function save() {
+    console.log("💾 Saving room data:", form)
+    
     // Merge uploaded photos (form.photos) with manually entered URLs (photosStr)
     const manualPhotos = photosStr
       .split(",")
@@ -231,6 +235,7 @@ export default function AdminRoomsPage() {
     
     const allPhotos = [...form.photos, ...manualPhotos]
 
+    // Ensure inventory and basePrice are numbers, not strings or undefined
     const payload = {
       ...form,
       photos: allPhotos,
@@ -238,19 +243,28 @@ export default function AdminRoomsPage() {
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean),
+      inventory: Number(form.inventory) || 0, // Force number conversion
+      basePrice: Number(form.basePrice) || 0, // Force number conversion
       dynamicPricing: form.dynamicPricing.map((dp) => ({
         ...dp,
         startDate: new Date(dp.startDate),
         endDate: new Date(dp.endDate),
+        price: Number(dp.price) || 0,
+        inventory: Number(dp.inventory) || 0,
       })),
     }
+
+    console.log("📤 Payload being sent:", payload)
 
     const res = await fetch(isEditing ? `/api/rooms/${form._id || form.slug}` : "/api/rooms", {
       method: isEditing ? "PUT" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
+    
     const j = await res.json().catch(() => ({}))
+    console.log("📥 API Response:", { status: res.status, data: j })
+    
     if (res.ok) {
       setForm(emptyForm)
       setPhotosStr("")
@@ -263,13 +277,15 @@ export default function AdminRoomsPage() {
         enabled: true,
       })
       await mutate()
-      alert("Saved!")
+      alert("Saved successfully!")
     } else {
       alert("Failed: " + (j.error || res.statusText))
     }
   }
 
   function startEdit(item: RoomForm) {
+    console.log("✏️ Starting edit for room:", item)
+    
     setForm({
       _id: item._id,
       name: item.name || "",
@@ -278,8 +294,8 @@ export default function AdminRoomsPage() {
       sizeSqm: item.sizeSqm,
       view: item.view,
       bedType: item.bedType,
-      basePrice: item.basePrice,
-      inventory: item.inventory,
+      basePrice: item.basePrice || 0, // Ensure number
+      inventory: item.inventory || 0, // Ensure number
       bathrooms: item.bathrooms,
       photos: item.photos || [],
       amenityBullets: item.amenityBullets || [],
@@ -515,7 +531,6 @@ export default function AdminRoomsPage() {
                     {dynamicPriceForm._id && (
                       <Button 
                         variant="outline" 
-                       
                         onClick={() => setDynamicPriceForm({
                           startDate: "",
                           endDate: "",
@@ -546,14 +561,12 @@ export default function AdminRoomsPage() {
                           <div className="flex gap-2">
                             <Button
                               variant="outline"
-                            
                               onClick={() => editDynamicPrice(rule)}
                             >
                               Edit
                             </Button>
                             <Button
                               variant="accent"
-                             
                               onClick={() => removeDynamicPrice(rule._id!)}
                             >
                               Remove
@@ -666,6 +679,7 @@ export default function AdminRoomsPage() {
                           <div className="font-medium">{r.name}</div>
                           <div className="text-sm text-muted-foreground">
                             slug: {r.slug} • Base: ₹{r.basePrice} • 
+                            Inventory: {r.inventory} • 
                             Dynamic Rules: {r.dynamicPricing?.length || 0}
                           </div>
                         </div>

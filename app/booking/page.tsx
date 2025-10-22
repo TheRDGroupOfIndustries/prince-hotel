@@ -55,7 +55,9 @@ interface PriceBreakdown {
   perRoomBasePrice?: number;
   originalBasePrice?: number;
   isDynamicPricing?: boolean;
+  extraAdults?: number; 
   extraAdultsCost?: number;
+  chargeableChildrenForStay?: number; 
   extraChildrenStayCost?: number;
   breakfastCost?: number;
   dinnerCost?: number;
@@ -241,7 +243,9 @@ function BookingPageContent() {
     const breakdown = quoteData.priceBreakdown;
     
     // Use perRoomBasePrice if available (from dynamic pricing), otherwise use basePrice
-    const basePricePerNight = breakdown.perRoomBasePrice || breakdown.basePrice || 0;
+    // This logic assumes perRoomBasePrice is the price for ONE room per night.
+    const basePricePerNight = breakdown.perRoomBasePrice || breakdown.originalBasePrice || 0;
+    
     const basePriceTotal = basePricePerNight * totalNights * (quoteData.numberOfRooms || 1);
     const extraAdultsCostTotal = (breakdown.extraAdultsCost || 0) * totalNights;
     const extraChildrenStayCostTotal = (breakdown.extraChildrenStayCost || 0) * totalNights;
@@ -420,6 +424,13 @@ function BookingPageContent() {
       </div>
     );
   }
+
+  // --- FIX APPLIED HERE ---
+  // Provide fallback values for potentially undefined numbers
+  const extraAdultsCount = quoteData.priceBreakdown.extraAdults ?? 0;
+  const extraChildrenCount = quoteData.priceBreakdown.chargeableChildrenForStay ?? 0;
+  const chargeableMeals = quoteData.priceBreakdown.numChargeableForMeals ?? 0;
+  // --- END OF FIX ---
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -615,40 +626,73 @@ function BookingPageContent() {
                 </div>
               </div>
 
+              {/* --- UPDATED PRICE SUMMARY --- */}
               <h3 className="text-xl font-bold text-gray-900 mb-4">Price Summary</h3>
               <div className="space-y-3">
+                
+                {/* Room Charges */}
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Base Price ({totalNights} night{totalNights !== 1 ? 's' : ''})</span>
-                  <span className="font-semibold">{fmt.format(finalPriceSummary.basePriceTotal)}</span>
+                  <span className="text-sm text-gray-600">
+                    Room Charges ({quoteData.numberOfRooms} Room{quoteData.numberOfRooms > 1 ? 's' : ''} x {totalNights} Night{totalNights > 1 ? 's' : ''})
+                  </span>
+                  <span className="text-sm font-semibold">{fmt.format(finalPriceSummary.basePriceTotal)}</span>
                 </div>
+
+                {/* Extra Adults */}
                 {finalPriceSummary.extraAdultsCostTotal > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Extra Adult Charges</span>
-                    <span className="font-semibold">{fmt.format(finalPriceSummary.extraAdultsCostTotal)}</span>
+                    <span className="text-sm text-gray-600">
+                      Extra Adult ({extraAdultsCount} x {totalNights} Night{totalNights > 1 ? 's' : ''})
+                    </span>
+                    <span className="text-sm font-semibold">{fmt.format(finalPriceSummary.extraAdultsCostTotal)}</span>
                   </div>
                 )}
+                
+                {/* Extra Children */}
                 {finalPriceSummary.extraChildrenStayCostTotal > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Extra Child (10+) Charges</span>
-                    <span className="font-semibold">{fmt.format(finalPriceSummary.extraChildrenStayCostTotal)}</span>
+                    <span className="text-sm text-gray-600">
+                      Extra Child ({extraChildrenCount} x {totalNights} Night{totalNights > 1 ? 's' : ''})
+                    </span>
+                    <span className="text-sm font-semibold">{fmt.format(finalPriceSummary.extraChildrenStayCostTotal)}</span>
                   </div>
                 )}
-                {quoteData.selections.mealPlan === 'CP' && finalPriceSummary.breakfastCostTotal > 0 && (
+                
+                {/* Breakfast */}
+                {finalPriceSummary.breakfastCostTotal > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Breakfast Cost</span>
-                    <span className="font-semibold">{fmt.format(finalPriceSummary.breakfastCostTotal)}</span>
+                    <span className="text-sm text-gray-600">
+                      Breakfast ({chargeableMeals} Guest{chargeableMeals > 1 ? 's' : ''} x {totalNights} Night{totalNights > 1 ? 's' : ''})
+                    </span>
+                    <span className="text-sm font-semibold">{fmt.format(finalPriceSummary.breakfastCostTotal)}</span>
                   </div>
                 )}
-                {quoteData.selections.mealPlan === 'AP' && finalPriceSummary.dinnerCostTotal > 0 && (
+                
+                {/* Dinner */}
+                {finalPriceSummary.dinnerCostTotal > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Dinner Cost</span>
-                    <span className="font-semibold">{fmt.format(finalPriceSummary.dinnerCostTotal)}</span>
+                    <span className="text-sm text-gray-600">
+                      Dinner ({chargeableMeals} Guest{chargeableMeals > 1 ? 's' : ''} x {totalNights} Night{totalNights > 1 ? 's' : ''})
+                    </span>
+                    <span className="text-sm font-semibold">{fmt.format(finalPriceSummary.dinnerCostTotal)}</span>
                   </div>
                 )}
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Taxes & Fees (5%)</span>
-                  <span className="font-semibold">{fmt.format(finalPriceSummary.taxes)}</span>
+
+                {/* --- Subtotal --- */}
+                <div className="border-t border-dashed pt-3 mt-3">
+                  <div className="flex justify-between font-semibold">
+                    <span className="text-gray-700">Subtotal</span>
+                    <span className="text-gray-900">{fmt.format(finalPriceSummary.subTotal)}</span>
+                  </div>
                 </div>
+
+                {/* Taxes */}
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Taxes & Fees (5%)</span>
+                  <span className="text-sm font-semibold">{fmt.format(finalPriceSummary.taxes)}</span>
+                </div>
+                
+                {/* --- Total --- */}
                 <div className="border-t pt-3">
                   <div className="flex justify-between text-lg font-bold">
                     <span>Total Amount</span>
@@ -656,6 +700,7 @@ function BookingPageContent() {
                   </div>
                 </div>
               </div>
+              
               <Button 
                 className="w-full mt-6 py-3 text-lg"
                 onClick={handlePayNow}
