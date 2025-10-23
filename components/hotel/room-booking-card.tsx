@@ -554,7 +554,7 @@ export function RoomBookingCard({ room, checkInDate, checkOutDate }: Props) {
                   )}
                 </div>
               <div>
-                <h4 className="font-medium text-gray-800 flex items-center gap-2"><User size={18} /> Select Guests</h4>
+                {/* <h4 className="font-medium text-gray-800 flex items-center gap-2"><User size={18} /> Select Guests</h4> */}
                 <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-center justify-between p-3 border rounded-md">
                     <label htmlFor="adults" className="text-sm font-medium">Adults</label>
