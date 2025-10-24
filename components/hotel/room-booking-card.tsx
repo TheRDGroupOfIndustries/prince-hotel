@@ -403,6 +403,17 @@ export function RoomBookingCard({ room, checkInDate, checkOutDate }: Props) {
     }
   }
 
+  // New functions for children plus/minus
+  const handleAddChildrenCount = () => {
+    setChildren([...children, { age: 2 }])
+  }
+
+  const handleRemoveChildrenCount = () => {
+    if (children.length > 0) {
+      setChildren(children.slice(0, -1))
+    }
+  }
+
   const handleBookNow = async () => {
     // Track booking initiation
     facebookEvents.initiateCheckout(priceBreakdown.totalPrice)
@@ -540,9 +551,8 @@ export function RoomBookingCard({ room, checkInDate, checkOutDate }: Props) {
                       <strong>Note:</strong> For {adults} adults in {isDeluxe ? 'Deluxe rooms' : 'this room type'}, minimum {requiredRooms} {requiredRooms === 1 ? 'room' : 'rooms'} required.
                       {numberOfRooms > requiredRooms && (
                         <span className="block mt-1 text-green-600">
-  You&apos;ve selected extra room{numberOfRooms - requiredRooms > 1 ? 's' : ''} for more comfort.
-</span>
-
+                          You&apos;ve selected extra room{numberOfRooms - requiredRooms > 1 ? 's' : ''} for more comfort.
+                        </span>
                       )}
                     </div>
                   )}
@@ -554,7 +564,6 @@ export function RoomBookingCard({ room, checkInDate, checkOutDate }: Props) {
                   )}
                 </div>
               <div>
-                {/* <h4 className="font-medium text-gray-800 flex items-center gap-2"><User size={18} /> Select Guests</h4> */}
                 <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-center justify-between p-3 border rounded-md">
                     <label htmlFor="adults" className="text-sm font-medium">Adults</label>
@@ -564,29 +573,58 @@ export function RoomBookingCard({ room, checkInDate, checkOutDate }: Props) {
                       <button onClick={() => setAdults(adults + 1)} className="text-green-500"><PlusCircle size={20} /></button>
                     </div>
                   </div>
+                  
+                  {/* Updated Children Section with Plus/Minus */}
                   <div className="p-3 border rounded-md space-y-2">
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-medium">
-                        Children <span className="text-xs text-gray-500">(0–17 yrs)</span>
+                        Children <span className="text-xs text-gray-500">(2–17 yrs)</span>
                       </label>
-                      <Button variant="outline" onClick={handleAddChild}>Add</Button>
-                    </div>
-                    {children.map((child, index) => (
-                      <div key={index} className="flex items-center justify-between gap-2">
-                        <span className="text-sm">Child {index + 1} Age</span>
-                        <select
-                          value={child.age}
-                          onChange={(e) => handleChildAgeChange(index, parseInt(e.target.value))}
-                          className="w-20 border border-gray-300 rounded-md text-sm py-1 px-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      <div className="flex items-center gap-3">
+                        <button 
+                          onClick={handleRemoveChildrenCount} 
+                          className="text-red-500 disabled:text-gray-300" 
+                          disabled={children.length <= 0}
                         >
-                          <option value="">--</option>
-                          {Array.from({ length: 17 }, (_, i) => (
-                            <option key={i + 1} value={i + 1}>{i + 1}</option>
-                          ))}
-                        </select>
-                        <button onClick={() => handleRemoveChild(index)} className="text-red-500 hover:text-red-700"><Trash2 size={16} /></button>
+                          <MinusCircle size={20} />
+                        </button>
+                        <span className="font-bold w-4 text-center">{children.length}</span>
+                        <button 
+                          onClick={handleAddChildrenCount} 
+                          className="text-green-500"
+                        >
+                          <PlusCircle size={20} />
+                        </button>
                       </div>
-                    ))}
+                    </div>
+                    
+                    {/* Children Age Selection - Only shown when children count > 0 */}
+                  {children.length > 0 && (
+  <div className="space-y-2 pt-2 border-t">
+    <p className="text-sm font-medium text-gray-700">Set ages for children:</p>
+    {children.map((child, index) => (
+      <div key={index} className="flex items-center justify-between gap-2">
+        <span className="text-sm">Child {index + 1} Age</span>
+        <select
+          value={child.age}
+          onChange={(e) => handleChildAgeChange(index, parseInt(e.target.value))}
+          className="w-20 border border-gray-300 rounded-md text-sm py-1 px-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+         
+          {Array.from({ length: 16 }, (_, i) => (
+            <option key={i + 2} value={i + 2}>{i + 2}</option>
+          ))}
+        </select>
+        <button 
+          onClick={() => handleRemoveChild(index)} 
+          className="text-red-500 hover:text-red-700"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
+    ))}
+  </div>
+)}  
                   </div>
                 </div>
 
