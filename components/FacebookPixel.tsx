@@ -3,6 +3,7 @@
 import Script from 'next/script'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useEffect } from 'react'
+import Image from 'next/image'
 
 export default function FacebookPixel() {
   const pathname = usePathname()
@@ -35,9 +36,10 @@ export default function FacebookPixel() {
         }}
       />
       <noscript>
-        <img
-          height="1"
-          width="1"
+        <Image
+          height={40}
+          width={40}
+          alt='facebook'
           style={{ display: 'none' }}
           src="https://www.facebook.com/tr?id=1122471102933325&ev=PageView&noscript=1"
         />

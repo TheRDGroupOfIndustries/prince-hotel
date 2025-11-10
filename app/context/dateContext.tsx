@@ -64,7 +64,7 @@ export function DateProvider({ children }: { children: ReactNode }) {
     if (!checkOutDate) {
       setCheckOutDate(getDefaultCheckOut())
     }
-  }, [])
+  }, [checkInDate,checkOutDate])
 
   const value: DateContextType = {
     checkInDate,

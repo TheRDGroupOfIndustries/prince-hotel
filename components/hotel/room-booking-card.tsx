@@ -9,7 +9,6 @@ import {
   MinusCircle,
   PlusCircle,
   Trash2,
-  User,
   Utensils,
   IndianRupee,
   Eye,
@@ -216,7 +215,7 @@ function MobileStickyBookingCard({
   onToggleExpand: () => void;
 }) {
   const fmt = new Intl.NumberFormat("en-IN");
-  const isDeluxe = isDeluxeRoom(room.name);
+  // const isDeluxe = isDeluxeRoom(room.name);
 
   return (
     <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
@@ -475,7 +474,7 @@ export function RoomBookingCard({ room, checkInDate, checkOutDate }: Props) {
   const hasSufficientInventory =
     priceBreakdown.numberOfRooms <= priceBreakdown.effectiveInventory;
 
-  const handleAddChild = () => setChildren([...children, { age: 5 }]);
+  // const handleAddChild = () => setChildren([...children, { age: 5 }]);
   const handleRemoveChild = (index: number) =>
     setChildren(children.filter((_, i) => i !== index));
   const handleChildAgeChange = (index: number, age: number) => {
@@ -557,6 +556,8 @@ export function RoomBookingCard({ room, checkInDate, checkOutDate }: Props) {
   const [isInView, setIsInView] = useState(false);
 
   useEffect(() => {
+     if (!cardRef.current) return;
+     const element = cardRef.current;
     const observer = new IntersectionObserver(
       ([entry]) => {
         setIsInView(entry.isIntersecting);
@@ -566,15 +567,12 @@ export function RoomBookingCard({ room, checkInDate, checkOutDate }: Props) {
         rootMargin: "-50px 0px -100px 0px", // Adjust margins to trigger appropriately
       }
     );
-
-    if (cardRef.current) {
-      observer.observe(cardRef.current);
-    }
+ observer.observe(element);
 
     return () => {
-      if (cardRef.current) {
-        observer.unobserve(cardRef.current);
-      }
+    
+        observer.unobserve(element);
+      
     };
   }, []);
 

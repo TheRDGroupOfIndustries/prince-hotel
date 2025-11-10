@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     // 1. Destructure ALL fields including the dynamic price and room type info
     const { 
       roomId, 
-      roomName,
+      // roomName,
       adults, 
       children, 
       mealPlan, 
