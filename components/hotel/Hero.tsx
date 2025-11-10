@@ -1,36 +1,39 @@
-
-
 // "use client";
 
 // import React from "react";
 
+
 // export const Hero: React.FC = () => {
 //   return (
-//     <section id='home' className="relative flex h-screen items-center justify-center overflow-hidden">
+//     <section
+//       id="home"
+//       className="relative flex min-h-[90vh] items-center justify-center overflow-hidden"
+//     >
 //       {/* Background Image */}
 //       <div
 //         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
 //         style={{
-//           backgroundImage:
-//             "url('/hero_image.jpg')",
+//           backgroundImage: "url('/hero_image.jpg')",
 //         }}
 //       >
-//         <div className="absolute inset-0 bg-black/40"></div>
+//         <div className="absolute inset-0 bg-black/50"></div>
 //       </div>
 
 //       {/* Hero Content */}
-//       <div className="relative z-10 mx-auto max-w-4xl px-4 text-center text-white">
-//         <h2 className="mb-6 text-5xl font-bold leading-[60px] md:text-6xl">
+//       <div className="relative z-10 mx-auto max-w-5xl px-4 text-center text-white">
+//         {/* Title */}
+//         <h2 className="mb-4 text-3xl font-bold leading-tight sm:text-4xl md:text-5xl lg:text-6xl">
 //           Experience Luxury in the Heart of Varanasi
 //         </h2>
-//         <p className="mb-8 text-xl leading-7 text-gray-200 md:text-2xl md:leading-8">
-//           Modern comfort meets traditional hospitality near Kashi Vishwanath
-//           Temple
+
+//         {/* Subtitle */}
+//         <p className="mb-8 text-base leading-6 text-gray-200 sm:text-lg md:text-xl lg:text-2xl">
+//           Modern comfort meets traditional hospitality near Kashi Vishwanath Temple
 //         </p>
 
 //         {/* Booking Form */}
-//         <div className="mx-auto max-w-5xl rounded-2xl bg-white/100 p-6 shadow-lg backdrop-blur-sm md:p-8">
-//           <form className="flex flex-col gap-4 md:flex-row md:items-center">
+//         <div className="mx-auto w-full max-w-5xl rounded-2xl bg-white p-6 shadow-lg backdrop-blur-sm md:p-8">
+//           <form className="flex flex-col gap-4 sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
 //             <input
 //               type="date"
 //               name="check_in"
@@ -64,7 +67,7 @@
 //             </select>
 //             <button
 //               type="submit"
-//               className="h-12 rounded-lg bg-blue-600 px-8 py-3 font-semibold text-white hover:bg-blue-700 whitespace-nowrap"
+//               className="h-12 w-full rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700 whitespace-nowrap"
 //             >
 //               Check Availability
 //             </button>
@@ -78,9 +81,30 @@
 
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Search } from "lucide-react";
+import { useDateContext } from "@/app/context/dateContext";
 
 export const Hero: React.FC = () => {
+  const router = useRouter();
+  const { setCheckInDate, setCheckOutDate } = useDateContext();
+
+  // Local state for temporary input values
+  const [checkIn, setCheckIn] = useState("");
+  const [checkOut, setCheckOut] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // ✅ Update global context before redirecting
+    if (checkIn) setCheckInDate(new Date(checkIn));
+    if (checkOut) setCheckOutDate(new Date(checkOut));
+
+    // ✅ Navigate to the rooms page and scroll to section
+    router.push("/rooms#available-rooms");
+  };
+
   return (
     <section
       id="home"
@@ -110,19 +134,29 @@ export const Hero: React.FC = () => {
 
         {/* Booking Form */}
         <div className="mx-auto w-full max-w-5xl rounded-2xl bg-white p-6 shadow-lg backdrop-blur-sm md:p-8">
-          <form className="flex flex-col gap-4 sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col gap-4 sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5"
+          >
+            {/* Check-in */}
             <input
               type="date"
               name="check_in"
-              defaultValue="2025-01-15"
+              value={checkIn}
+              onChange={(e) => setCheckIn(e.target.value)}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-700 focus:border-blue-500 focus:outline-none"
             />
+
+            {/* Check-out */}
             <input
               type="date"
               name="check_out"
-              defaultValue="2025-01-16"
+              value={checkOut}
+              onChange={(e) => setCheckOut(e.target.value)}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-700 focus:border-blue-500 focus:outline-none"
             />
+
+            {/* Guests */}
             <select
               name="guests"
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-700 focus:border-blue-500 focus:outline-none"
@@ -133,6 +167,8 @@ export const Hero: React.FC = () => {
               <option value="3">3 Guests</option>
               <option value="4">4 Guests</option>
             </select>
+
+            {/* Rooms */}
             <select
               name="rooms"
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-700 focus:border-blue-500 focus:outline-none"
@@ -142,10 +178,13 @@ export const Hero: React.FC = () => {
               <option value="2">2 Rooms</option>
               <option value="3">3 Rooms</option>
             </select>
+
+            {/* Button */}
             <button
               type="submit"
-              className="h-12 w-full rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700 whitespace-nowrap"
+              className="flex items-center justify-center gap-2 h-12 w-full rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700 whitespace-nowrap"
             >
+              <Search className="w-5 h-5" />
               Check Availability
             </button>
           </form>

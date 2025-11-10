@@ -41,7 +41,7 @@ export default function Page() {
         // Remove featuredRoom prop since it will be fetched inside the component
       />
 
-      <section id="available-rooms" className="space-y-6">
+      <section id="available-rooms" className="space-y-2 md:space-y-6">
         <h2 className="text-lg font-semibold">Available Rooms &amp; Plans</h2>
         {/* RoomsFromApi will handle its own data fetching */}
         <RoomsFromApi initialRooms={[]} />

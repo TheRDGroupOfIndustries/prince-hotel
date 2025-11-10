@@ -73,6 +73,7 @@
 import React from "react";
 import Image from "next/image";
 import { Check } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export type RoomCardProps = {
   imageAlt: string;
@@ -97,6 +98,8 @@ export const RoomCard: React.FC<RoomCardProps> = ({
   amenities,
   buttonText,
 }) => {
+
+  const router= useRouter();
   return (
     <div className="bg-white overflow-hidden rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
       {/* Image Section */}
@@ -134,7 +137,7 @@ export const RoomCard: React.FC<RoomCardProps> = ({
           ))}
         </ul>
 
-        <button className="w-full rounded-lg bg-blue-600 py-3 font-semibold text-white hover:bg-blue-700 transition-colors">
+        <button onClick={() => router.push('/rooms')} className="w-full rounded-lg bg-blue-600 py-3 font-semibold text-white hover:bg-blue-700 transition-colors">
           {buttonText}
         </button>
       </div>
