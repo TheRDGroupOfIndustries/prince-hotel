@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 interface HotelHeaderProps {
   name: string;
@@ -16,6 +17,7 @@ interface HotelHeaderProps {
 
 export function HotelHeader(props: HotelHeaderProps) {
   const { name, logo } = props;
+  const router=useRouter();
   
   return (
     <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -26,7 +28,8 @@ export function HotelHeader(props: HotelHeaderProps) {
             alt={`${name} logo`}
             width={100}
             height={48}
-            className="h-12 w-auto mb-2 md:mb-0 object-contain"
+            className="h-12 w-auto mb-2 md:mb-0 object-contain cursor-pointer"
+             onClick={() => router.push("/")}
           />
         )}
        

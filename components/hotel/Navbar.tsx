@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 export const Navbar: React.FC = () => {
   const router = useRouter();
   const handleScroll = (id: string) => {
@@ -16,12 +17,14 @@ export const Navbar: React.FC = () => {
       <div className="max-w-screen-xl mx-auto px-4 md:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo / Brand */}
-          <h1
-            className="text-2xl font-bold text-gray-900 font-pacifico cursor-pointer"
-            onClick={() => handleScroll("#home")}
-          >
-            Hotel Prince Diamond
-          </h1>
+          <Image
+            src="/images/prince-logo.png"
+            alt={`logo`}
+            width={100}
+            height={48}
+            className="h-12 w-auto mb-2 md:mb-0 object-contain cursor-pointer"
+             onClick={() => handleScroll("#home")}
+          />
 
           {/* Navigation Links */}
           <div className="hidden md:flex space-x-8">
