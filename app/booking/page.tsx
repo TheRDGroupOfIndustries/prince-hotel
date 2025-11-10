@@ -7,10 +7,10 @@ import { Card } from "@/components/base/card"
 import { Input } from "@/components/base/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+// import { Calendar } from "@/components/ui/calendar"
+// import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { format, differenceInDays, addDays } from 'date-fns'
-import { CalendarIcon, Mail, Phone, Loader2, Clock, UserPlus, X } from 'lucide-react'
+import {  Mail, Phone, Loader2, Clock, UserPlus, X } from 'lucide-react'
 import { useDateContext } from "@/app/context/dateContext"
 import { facebookEvents } from '@/lib/facebookPixel'
 // --- Type Definitions ---
@@ -115,7 +115,9 @@ function BookingPageContent() {
   const router = useRouter();
   
   // Get dates from global context
-  const { checkInDate: contextCheckIn, checkOutDate: contextCheckOut, setCheckInDate, setCheckOutDate } = useDateContext();
+  const { checkInDate: contextCheckIn, checkOutDate: contextCheckOut
+    // , setCheckInDate, setCheckOutDate 
+  } = useDateContext();
   
   const [quoteData, setQuoteData] = useState<QuoteData | null>(null);
   
@@ -211,36 +213,36 @@ function BookingPageContent() {
   }, [checkInDate, checkOutDate]);
 
   // Fixed date change handlers - update both local state and global context
-  const handleCheckInChange = (date: Date | undefined) => {
-    if (!date) return;
+  // const handleCheckInChange = (date: Date | undefined) => {
+  //   if (!date) return;
     
-    const newCheckIn = resetTimeToMidnight(date);
-    setLocalCheckInDate(newCheckIn);
-    setCheckInDate(newCheckIn); // Update global context
+  //   const newCheckIn = resetTimeToMidnight(date);
+  //   setLocalCheckInDate(newCheckIn);
+  //   setCheckInDate(newCheckIn); // Update global context
     
-    // If check-out is before or equal to new check-in, adjust check-out
-    if (checkOutDate && newCheckIn >= checkOutDate) {
-      const newCheckOut = resetTimeToMidnight(addDays(newCheckIn, 1));
-      setLocalCheckOutDate(newCheckOut);
-      setCheckOutDate(newCheckOut); // Update global context
-    }
-  };
+  //   // If check-out is before or equal to new check-in, adjust check-out
+  //   if (checkOutDate && newCheckIn >= checkOutDate) {
+  //     const newCheckOut = resetTimeToMidnight(addDays(newCheckIn, 1));
+  //     setLocalCheckOutDate(newCheckOut);
+  //     setCheckOutDate(newCheckOut); // Update global context
+  //   }
+  // };
 
-  const handleCheckOutChange = (date: Date | undefined) => {
-    if (!date) return;
+  // const handleCheckOutChange = (date: Date | undefined) => {
+  //   if (!date) return;
     
-    const newCheckOut = resetTimeToMidnight(date);
+  //   const newCheckOut = resetTimeToMidnight(date);
     
-    // Ensure check-out is after check-in
-    if (newCheckOut <= checkInDate) {
-      const minCheckOut = resetTimeToMidnight(addDays(checkInDate, 1));
-      setLocalCheckOutDate(minCheckOut);
-      setCheckOutDate(minCheckOut); // Update global context
-    } else {
-      setLocalCheckOutDate(newCheckOut);
-      setCheckOutDate(newCheckOut); // Update global context
-    }
-  };
+  //   // Ensure check-out is after check-in
+  //   if (newCheckOut <= checkInDate) {
+  //     const minCheckOut = resetTimeToMidnight(addDays(checkInDate, 1));
+  //     setLocalCheckOutDate(minCheckOut);
+  //     setCheckOutDate(minCheckOut); // Update global context
+  //   } else {
+  //     setLocalCheckOutDate(newCheckOut);
+  //     setCheckOutDate(newCheckOut); // Update global context
+  //   }
+  // };
 
   const finalPriceSummary = useMemo(() => {
     if (!quoteData) return null;

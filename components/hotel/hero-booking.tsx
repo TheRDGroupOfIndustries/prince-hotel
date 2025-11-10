@@ -229,23 +229,23 @@ interface Props {
 }
 
 export function HeroBooking({ images, hotel }: Props) {
-  const fmt = new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: hotel.currency,
-    minimumFractionDigits: 0,
-  });
+  // const fmt = new Intl.NumberFormat("en-IN", {
+  //   style: "currency",
+  //   currency: hotel.currency,
+  //   minimumFractionDigits: 0,
+  // });
 
   const { checkInDate, checkOutDate } = useDateContext();
   const [featuredRoom, setFeaturedRoom] = useState<RoomType | null>(null);
-  const [showFeatured, setShowFeatured] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  // const [showFeatured, setShowFeatured] = useState(false);
+  // const [isLoading, setIsLoading] = useState(true);
 
   // Fetch rooms and select featured room based on priority (Deluxe → Super Deluxe → Premium)
   useEffect(() => {
     facebookEvents.viewContent('Hotel Page', hotel.name, hotel.startingPrice)
     async function fetchRooms() {
       try {
-        setIsLoading(true);
+        // setIsLoading(true);
         const res = await fetch('/api/rooms', { 
           cache: 'no-store'
         });
@@ -293,26 +293,26 @@ export function HeroBooking({ images, hotel }: Props) {
         setFeaturedRoom(selectedFeaturedRoom);
         
         // Only show featured room card after data is loaded
-        if (selectedFeaturedRoom) {
-          setShowFeatured(true);
-        }
+        // if (selectedFeaturedRoom) {
+        //   setShowFeatured(true);
+        // }
       } catch (error) {
         console.error("Error fetching rooms:", error);
       } finally {
-        setIsLoading(false);
+        // setIsLoading(false);
       }
     }
 
     fetchRooms();
-  }, [checkInDate, checkOutDate]); // Re-fetch when dates change
+  }, [checkInDate, checkOutDate,hotel]); // Re-fetch when dates change
 
-  const scrollToFeaturedRoom = () => {
-    if (!featuredRoom) return;
-    const el = document.getElementById(`room-${featuredRoom._id}`);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  };
+  // const scrollToFeaturedRoom = () => {
+  //   if (!featuredRoom) return;
+  //   const el = document.getElementById(`room-${featuredRoom._id}`);
+  //   if (el) {
+  //     el.scrollIntoView({ behavior: "smooth", block: "center" });
+  //   }
+  // };
 
  const scrollToRoomsSection = () => {
   // Track when user searches for availability
