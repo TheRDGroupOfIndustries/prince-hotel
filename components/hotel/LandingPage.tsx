@@ -7,7 +7,7 @@ import { AmenitiesSection } from './AmenitiesSection'
 import { LocationSection } from './LocationSection'
 import { ContactSection } from './ContactSection'
 import { Footer } from './Footer'
-import { ChatWidget } from './ChatWideget'
+// import { ChatWidget } from './ChatWideget'
 
 const LandingPage = () => {
   return (
@@ -20,7 +20,7 @@ const LandingPage = () => {
     <LocationSection/>
     <ContactSection/>
     <Footer/>
-    <ChatWidget />
+    {/* <ChatWidget /> */}
     </>
   )
 }

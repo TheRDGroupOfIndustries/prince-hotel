@@ -75,7 +75,7 @@ export default function RoomsFromApi({ initialRooms }: { initialRooms?: ApiRoom[
   const sortedRooms = rooms.slice().sort((a, b) => a._id.localeCompare(b._id))
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-2 md:space-y-6">
       {/* Rooms List - uses dates from global context */}
       {sortedRooms.map((room) => (
         <div key={room._id} id={`room-${room._id}`}>

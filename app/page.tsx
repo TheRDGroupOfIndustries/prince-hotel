@@ -2,10 +2,9 @@
 
 import LandingPage from "@/components/hotel/LandingPage";
 
-
 export default function Home() {
   return (
-//  <Page/>
-<LandingPage/>
+    //  <Page/>
+    <LandingPage />
   );
 }
