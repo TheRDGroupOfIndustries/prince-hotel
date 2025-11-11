@@ -30,11 +30,10 @@
 
 import { Hero } from './Hero'
 import { WelcomeSection } from './WelcomeSection'
-import { RoomsSection } from './RoomsSection'
+import RoomsSection from './RoomsSection'
 import { AmenitiesSection } from './AmenitiesSection'
 import { LocationSection } from './LocationSection'
 import { ContactSection } from './ContactSection'
-import { Footer } from './Footer'
 
 
 const LandingPage = () => {
@@ -46,7 +45,6 @@ const LandingPage = () => {
       <section id="amenities"><AmenitiesSection /></section>
       <section id="location"><LocationSection /></section>
       <section id="contact"><ContactSection /></section>
-      <Footer />
     </>
   );
 };
