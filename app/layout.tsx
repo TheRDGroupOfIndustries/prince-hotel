@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono ,Pacifico } from "next/font/google";
+import { Geist, Geist_Mono, Pacifico } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { DateProvider } from "./context/dateContext";
@@ -17,9 +17,9 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 const pacifico = Pacifico({
-  weight: "400", 
+  weight: "400",
   subsets: ["latin"],
-   variable: "--font-pacifico",
+  variable: "--font-pacifico",
 });
 
 export const metadata: Metadata = {
@@ -56,10 +56,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${pacifico.variable} antialiased`}
       >
         <DateProvider>
-         <NavbarWrapper/>
-          {children}
+          <NavbarWrapper>{children}</NavbarWrapper>
         </DateProvider>
-        
+
         <Suspense fallback={null}>
           <FacebookPixel />
         </Suspense>
