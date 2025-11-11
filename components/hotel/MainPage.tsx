@@ -1,5 +1,5 @@
 import { HOTEL_PRINCE_DIAMOND } from "@/data/hotel-prince-diamond"
-import { HotelHeader } from "@/components/hotel/hotel-header"
+// import { HotelHeader } from "@/components/hotel/hotel-header"
 import { HeroBooking } from "@/components/hotel/hero-booking"
 import { ReviewsSection } from "@/components/hotel/reviews-section"
 import { PropertyRules } from "@/components/hotel/property-rules"
@@ -9,10 +9,11 @@ import RoomsFromApi from "@/components/hotel/rooms-from-api"
 
 export default function Page() {
   const hotel = HOTEL_PRINCE_DIAMOND;
+  
 
   return (
     <main className="container mx-auto max-w-6xl space-y-2 px-3 py-3">
-      <HotelHeader
+      {/* <HotelHeader
         name={hotel.name}
         city={hotel.city}
         country={hotel.country}
@@ -22,7 +23,7 @@ export default function Page() {
         startingPrice={hotel.startingPrice}
         currency={hotel.currency}
         logo={hotel.logo}
-      />
+      /> */}
 
       <HeroBooking 
         images={hotel.heroPhotos}
@@ -61,6 +62,7 @@ export default function Page() {
         Note: This page is a stand‑alone booking view for {hotel.name}. Pricing and availability may change based on
         selected dates and occupancy.
       </Card>
+      
     </main>
   )
 }

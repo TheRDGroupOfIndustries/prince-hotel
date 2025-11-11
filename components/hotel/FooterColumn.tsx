@@ -1,11 +1,13 @@
 "use client";
 
+import Image from "next/image";
 import React from "react";
 
 export type FooterColumnProps = {
   variant: "about" | "links" | "services" | "contact";
   title?: string;
   description?: string;
+  logoSrc?: string;
   socialLinks?: Array<{
     href: string;
     icon: React.ReactNode;
@@ -24,7 +26,10 @@ export const FooterColumn: React.FC<FooterColumnProps> = (props) => {
   if (variant === "about") {
     return (
       <div>
-        <h4 className="mb-4 font-pacifico text-xl font-bold leading-7">{title}</h4>
+        {/* <h4 className="mb-4 font-pacifico text-xl font-bold leading-7">{title}</h4> */}
+         {props.logoSrc && (
+        <Image width={40} height={40} src={props.logoSrc} alt="Hotel Prince Logo" className="mb-4 h-12 w-auto" />
+      )}
         <p className="mb-4 text-gray-400">{description}</p>
         <div className="flex gap-4">
           {socialLinks?.map((link, index) => (
