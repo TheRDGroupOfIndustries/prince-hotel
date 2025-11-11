@@ -5,6 +5,7 @@ import "./globals.css";
 import { DateProvider } from "./context/dateContext";
 import FacebookPixel from "@/components/FacebookPixel";
 import { Suspense } from "react";
+import NavbarWrapper from "@/components/hotel/NavbarWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -55,6 +56,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${pacifico.variable} antialiased`}
       >
         <DateProvider>
+         <NavbarWrapper/>
           {children}
         </DateProvider>
         

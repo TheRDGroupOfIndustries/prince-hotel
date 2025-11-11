@@ -107,7 +107,6 @@ export const Hero: React.FC = () => {
 
   return (
     <section
-      id="home"
       className="relative flex min-h-[90vh] items-center justify-center overflow-hidden"
     >
       {/* Background Image */}
