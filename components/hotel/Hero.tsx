@@ -30,7 +30,7 @@ export const Hero: React.FC = () => {
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: "url('/princehotel3.jpg')",
+          backgroundImage: "url('/princehotel7.jpg')",
         }}
       >
         <div className="absolute inset-0 bg-black/50"></div>
