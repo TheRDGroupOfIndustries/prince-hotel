@@ -212,12 +212,12 @@ export default function GalleryPage() {
 
   const photos = useMemo(
     () => [
-      "/images/gallery/DJI_20250913175908_0788_D.jpg",
-      "/images/gallery/DJI_20250913175928_0789_D.jpg",
-      "/images/gallery/DJI_20250913175945_0790_D.jpg",
-      "/images/gallery/DJI_20250913180008_0791_D.jpg",
-      "/images/gallery/DJI_20250913180032_0792_D.jpg",
-      "/images/gallery/DJI_20250913180055_0794_D.jpg",
+      // "/images/gallery/DJI_20250913175908_0788_D.jpg",
+      // "/images/gallery/DJI_20250913175928_0789_D.jpg",
+      // "/images/gallery/DJI_20250913175945_0790_D.jpg",
+      // "/images/gallery/DJI_20250913180008_0791_D.jpg",
+      // "/images/gallery/DJI_20250913180032_0792_D.jpg",
+      // "/images/gallery/DJI_20250913180055_0794_D.jpg",
       "/images/gallery/DSC_1305-Edit-2.jpg",
       "/images/gallery/DSC_1311-HDR.jpg",
       "/images/gallery/DSC_1314-HDR.jpg",
