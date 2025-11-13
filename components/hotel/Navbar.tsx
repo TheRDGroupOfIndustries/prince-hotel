@@ -139,6 +139,14 @@ export const Navbar: React.FC = () => {
               Gallery
             </button>
              </Link>
+            <Link href='/place-to-visit'>
+               <button
+      
+              className="text-gray-700 font-medium hover:text-blue-600"
+            >
+              Place To Visit
+            </button>
+             </Link>
             <button
               onClick={() => handleScroll("#contact")}
               className="text-gray-700 font-medium hover:text-blue-600"
