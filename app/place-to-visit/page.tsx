@@ -15,7 +15,7 @@ function PlaceCard({ img, title, description, distance }: PlaceCardProps) {
         alt={title}
         width={600}
         height={400}
-        className="w-full h-64 object-cover rounded-xl mb-4"
+        className="w-full h-74 object-cover rounded-xl mb-4"
       />
       <h2 className="text-2xl font-semibold">{title}</h2>
       <p className="mt-2 text-lg leading-relaxed ml-8">{description}</p>
@@ -30,69 +30,69 @@ function PlaceCard({ img, title, description, distance }: PlaceCardProps) {
 export default function PlacesToVisitPage() {
   const places = [
     {
-      img: "/images/Kashi.png",
+      img: "/images/Kashi.jpeg",
       title: "1. Kashi Vishwanath Temple",
       description:
         "Dedicated to Lord Shiva, this temple is one of the 12 Jyotirlingas. Early mornings are the best time for darshan. VIP Darshan available.",
       distance: "Approx. 6 km from Prince Diamond Hotel.",
     },
     {
-      img: "/images/Dashashwamedh.png",
+      img: "/images/Dashashwamedh.webp",
       title: "2. Dashashwamedh Ghat",
       description:
         "Famous for its evening Ganga Aarti — a breathtaking ritual of lights, chants, and devotion. Boat rides available for the best view.",
       distance: "Approx. 5 km from Prince Diamond Hotel.",
     },
     {
-      img: "/images/assi-ghat.png",
+      img: "/images/assi-ghat.jpg",
       title: "3. Assi Ghat",
       description:
         "Perfect for morning walks, sunrise views, yoga, and peaceful boat rides.",
       distance: "Approx. 7 km from Prince Diamond Hotel.",
     },
     {
-      img: "/images/sarnath.png",
+      img: "/images/sarnath.webp",
       title: "4. Sarnath",
       description:
         "One of Buddhism’s most important sites with Dhamek Stupa, Ashokan Pillar, and Sarnath Museum.",
       distance: "Approx. 10 km from Prince Diamond Hotel.",
     },
     {
-      img: "/images/manikarnika-ghat.png",
+      img: "/images/manikarnika-ghat.jpeg",
       title: "5. Manikarnika Ghat",
       description:
         "The sacred cremation ghat representing the Hindu belief in liberation (moksha).",
       distance: "Approx. 5.5 km from Prince Diamond Hotel.",
     },
     {
-      img: "/images/bhu.png",
+      img: "/images/bhu.jpg",
       title: "6. Banaras Hindu University (BHU)",
       description:
         "One of Asia’s largest universities, also home to the New Vishwanath Temple.",
       distance: "Approx. 8 km from Prince Diamond Hotel.",
     },
     {
-      img: "/images/ramnagar-fort.png",
+      img: "/images/ramnagar-fort.jpg",
       title: "7. Ramnagar Fort",
       description:
         "A royal fort featuring vintage cars, manuscripts, and regal artifacts.",
       distance: "Approx. 12 km from Prince Diamond Hotel.",
     },
     {
-      img: "/images/godowlia.png",
+      img: "/images/godowlia.jpg",
       title: "8. Godowlia Market",
       description:
         "Famous market for Banarasi sarees, handicrafts, brassware, and snacks.",
       distance: "Approx. 4 km from Prince Diamond Hotel.",
     },
     {
-      img: "/images/tulsi-manas-mandir.png",
+      img: "/images/tulsi-manas-mandir.jpg",
       title: "9. Tulsi Manas Mandir",
       description: "White marble temple with Ramcharitmanas inscriptions.",
       distance: "Approx. 8.5 km from Prince Diamond Hotel.",
     },
     {
-      img: "/images/kaal-bhairav.png",
+      img: "/images/kaal-bhairav.jpg",
       title: "10. Kaal Bhairav Temple",
       description:
         "One of the oldest temples dedicated to Lord Kaal Bhairav — the fierce guardian of Kashi.",
@@ -115,7 +115,7 @@ export default function PlacesToVisitPage() {
         Here are the top 10 places you simply can’t miss during your visit!
       </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {places.map((place, index) => (
           <PlaceCard key={index} {...place} />
         ))}
