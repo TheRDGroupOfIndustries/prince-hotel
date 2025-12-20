@@ -46,7 +46,7 @@ export const FooterContent: React.FC = () => {
         contactInfo={[
           "Kakarmata, Varanasi",
           "Uttar Pradesh, India",
-          "+91 98765 43210",
+          "+91 96959 81555",
           "info@princediamondhotel.com",
         ]}
       />
