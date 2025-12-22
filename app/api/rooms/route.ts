@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import dbConnect from "@/lib/mongodb"
 import { Room, type IRoom } from "@/models/room"
-
+import { cookies } from "next/headers"
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const q = searchParams.get("q")
@@ -29,6 +29,17 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  // ✅ SECURITY CHECK: Verify the user is an Admin
+  const cookieStore = await cookies()
+  const isAdmin = cookieStore.has('admin_session')
+
+  if (!isAdmin) {
+    return NextResponse.json(
+      { error: "Unauthorized: Admin access required" }, 
+      { status: 401 }
+    )
+  }
+
   await dbConnect()
 
   let payload: IRoom
@@ -56,4 +67,4 @@ export async function POST(req: NextRequest) {
         : error?.message || "Failed to create room"
     return NextResponse.json({ error: msg }, { status: 400 })
   }
-} 
+}

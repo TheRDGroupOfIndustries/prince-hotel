@@ -1,12 +1,12 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { use, useEffect, useMemo, useState } from "react"
 import useSWR from "swr"
 import { Card } from "@/components/base/card"
 import { Button } from "@/components/base/button"
 import { BookingsSection } from "@/components/admin/booking"
 import Image from "next/image"
-
+import { useRouter } from "next/navigation"
 type RatePlanGroup = "room-only" | "breakfast"
 
 type Plan = {
@@ -57,18 +57,34 @@ const fetcher = (url: string) =>
     .then((j) => j.data)
 
 function AdminNav({ current, onChange }: { current: string; onChange: (k: string) => void }) {
+  const router = useRouter()
+
   const items = [
     { key: "rooms", label: "Rooms" },
     { key: "bookings", label: "Bookings" },
     { key: "settings", label: "Settings" },
   ]
+
+  const handleLogout = async () => {
+    try {
+      // Call the logout API to delete the secure cookie
+      await fetch("/api/auth/logout", { method: "POST" })
+      // Redirect to login page
+      router.push("/login")
+      router.refresh() // Ensure the middleware re-runs immediately
+    } catch (error) {
+      console.error("Logout failed", error)
+    }
+  }
+
   return (
-    <nav className="flex gap-2">
+    <nav className="flex gap-2 items-center">
+      {/* Navigation Items */}
       {items.map((it) => (
         <button
           key={it.key}
           onClick={() => onChange(it.key)}
-          className={`px-3 py-2 rounded-md text-sm font-medium border ${
+          className={`px-3 py-2 rounded-md text-sm font-medium border transition-colors ${
             current === it.key
               ? "bg-primary text-primary-foreground border-primary"
               : "bg-card text-foreground border-border hover:bg-muted"
@@ -77,11 +93,22 @@ function AdminNav({ current, onChange }: { current: string; onChange: (k: string
           {it.label}
         </button>
       ))}
+
+      {/* Visual Separator */}
+      <div className="h-6 w-px bg-border mx-1" />
+
+      {/* Logout Button */}
+      <button
+        onClick={handleLogout}
+        className="px-3 py-2 rounded-md text-sm font-medium border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+      >
+        Logout
+      </button>
     </nav>
   )
 }
-
 export default function AdminRoomsPage() {
+  const router = useRouter()
   const [section, setSection] = useState("rooms")
   const { data, error, isLoading, mutate } = useSWR<RoomForm[]>("/api/rooms", fetcher, {
     revalidateOnFocus: false,
@@ -92,7 +119,10 @@ export default function AdminRoomsPage() {
     console.log("⚠️ SWR Error:", error)
     console.log("⏳ SWR Loading:", isLoading)
   }, [data, error, isLoading])
-
+const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" })
+    router.push("/login")
+  }
   const emptyForm: RoomForm = useMemo(
     () => ({
       name: "",
