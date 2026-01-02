@@ -43,6 +43,7 @@ import { Loader2 } from "lucide-react";
 // 👇 Small inner component that uses useSearchParams safely
 function HomeContent() {
   const searchParams = useSearchParams();
+  
 
   useEffect(() => {
     const scrollTo = searchParams.get("scrollTo");
