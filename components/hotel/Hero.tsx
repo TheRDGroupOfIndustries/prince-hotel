@@ -1,24 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { useDateContext } from "@/app/context/dateContext";
 
 export const Hero: React.FC = () => {
   const router = useRouter();
-  const { setCheckInDate, setCheckOutDate } = useDateContext();
-
-  // Local state for temporary input values
-  const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
+  const { checkInDate, checkOutDate, setCheckInDate, setCheckOutDate } = useDateContext();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    // ✅ Update global context before redirecting
-    if (checkIn) setCheckInDate(new Date(checkIn));
-    if (checkOut) setCheckOutDate(new Date(checkOut));
 
     // ✅ Navigate to the rooms page and scroll to section
     router.push("/rooms#available-rooms");
@@ -67,9 +59,9 @@ export const Hero: React.FC = () => {
                 id="check_in"
                 type="date"
                 name="check_in"
-                value={checkIn}
-                onChange={(e) => setCheckIn(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-700 focus:border-blue-500 focus:outline-none"
+                value={checkInDate ? checkInDate.toISOString().split("T")[0] : ""}
+                onChange={(e) => setCheckInDate(e.target.value ? new Date(e.target.value) : null)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
               />
             </div>
 
@@ -85,9 +77,9 @@ export const Hero: React.FC = () => {
                 id="check_out"
                 type="date"
                 name="check_out"
-                value={checkOut}
-                onChange={(e) => setCheckOut(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-700 focus:border-blue-500 focus:outline-none"
+                value={checkOutDate ? checkOutDate.toISOString().split("T")[0] : ""}
+                onChange={(e) => setCheckOutDate(e.target.value ? new Date(e.target.value) : null)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
               />
             </div>
 
@@ -107,34 +99,3 @@ export const Hero: React.FC = () => {
     </section>
   );
 };
-
-{
-  /* Guests */
-}
-{
-  /* <select
-              name="guests"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-700 focus:border-blue-500 focus:outline-none"
-              defaultValue="1"
-            >
-              <option value="1">1 Guest</option>
-              <option value="2">2 Guests</option>
-              <option value="3">3 Guests</option>
-              <option value="4">4 Guests</option>
-            </select> */
-}
-
-{
-  /* Rooms */
-}
-{
-  /* <select
-              name="rooms"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-700 focus:border-blue-500 focus:outline-none"
-              defaultValue="1"
-            >
-              <option value="1">1 Room</option>
-              <option value="2">2 Rooms</option>
-              <option value="3">3 Rooms</option>
-            </select> */
-}
