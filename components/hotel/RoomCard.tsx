@@ -155,7 +155,7 @@ export const RoomCard: React.FC<RoomCardProps> = ({
         </ul>
 
         <button
-          onClick={handleBookNow}
+          // onClick={handleBookNow}
           className="w-full rounded-lg bg-blue-600 py-3 font-semibold text-white hover:bg-blue-700 transition-colors"
         >
           {buttonText}

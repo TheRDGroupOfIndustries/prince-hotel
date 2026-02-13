@@ -13,7 +13,8 @@ export const Hero: React.FC = () => {
     e.preventDefault();
 
     // ✅ Navigate to the rooms page and scroll to section
-    router.push("/rooms#available-rooms");
+    // router.push("/rooms#available-rooms");
+    router.push("/");
   };
 
   return (
