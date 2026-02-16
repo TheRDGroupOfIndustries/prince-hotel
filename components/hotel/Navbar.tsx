@@ -120,33 +120,33 @@ export const Navbar: React.FC = () => {
              </Link>
           
             <button
-              onClick={() => handleScroll("#home")}
+              onClick={() => handleScroll("#rooms")}
               className="text-gray-700 font-medium hover:text-blue-600"
             >
               Rooms
             </button>
             <button
-              onClick={() => handleScroll("#home")}
+              onClick={() => handleScroll("#amenities")}
               className="text-gray-700 font-medium hover:text-blue-600"
             >
               Amenities
             </button>
-            {/* <Link href='/gallery'> */}
+            <Link href='/gallery'>
                <button
       onClick={()=> handleScroll("#home")}
               className="text-gray-700 font-medium hover:text-blue-600"
             >
               Gallery
             </button>
-             {/* </Link> */}
-            {/* <Link href='/place-to-visit'> */}
+             </Link>
+            <Link href='/place-to-visit'>
                <button
       onClick={()=> handleScroll("#home")}
               className="text-gray-700 font-medium hover:text-blue-600"
             >
               Place To Visit
             </button>
-             {/* </Link> */}
+             </Link>
             <button
               onClick={() => handleScroll("#contact")}
               className="text-gray-700 font-medium hover:text-blue-600"
@@ -157,8 +157,8 @@ export const Navbar: React.FC = () => {
 
           {/* CTA Button */}
           <button
-            // onClick={() => router.push("/rooms")}
-            onClick={()=> handleScroll("#home")}
+            onClick={() => router.push("/rooms")}
+            // onClick={()=> handleScroll("#home")}
             className="cursor-pointer bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg hover:bg-blue-700 whitespace-nowrap"
           >
             Book Now
